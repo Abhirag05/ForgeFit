@@ -48,11 +48,11 @@ $workoutData = [
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="#" class="menu-item">
+                <a href="user_workout.php" class="menu-item">
                     <i class="fas fa-running"></i>
                     <span>Workouts</span>
                 </a>
-                <a href="#" class="menu-item">
+                <a href="user_meal.php" class="menu-item">
                     <i class="fas fa-utensils"></i>
                     <span>Nutrition</span>
                 </a>
