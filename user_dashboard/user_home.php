@@ -72,7 +72,7 @@ $workoutData = [
             <div class="header">
                 <h1>Welcome, <?php echo htmlspecialchars($_SESSION['n'] ?? 'Champion'); ?>!</h1>
                 <div class="user-profile">
-                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['n'] ?? 'User'); ?>&background=random" alt="Profile">
+                    <a href="user_profile.php"><img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['n'] ?? 'User'); ?>&background=random" alt="Profile"></a>
                     <span class="name"><?php echo htmlspecialchars($_SESSION['n'] ?? 'User'); ?></span>
                     <a href="../logout.php" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i>

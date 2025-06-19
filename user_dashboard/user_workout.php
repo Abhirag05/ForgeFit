@@ -18,7 +18,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 // Fetch workout history
 $user_id = $_SESSION['user_id'];
-$query = "SELECT lw.date, w.name AS workout, lw.sets, lw.reps, lw.weight
+$query = "SELECT lw.date, w.name AS workout, lw.sets, lw.duration, lw.weight, lw.calories_burned
           FROM logged_workouts lw
           JOIN workouts w ON lw.workout_id = w.id
           WHERE lw.user_id = $user_id
@@ -34,171 +34,7 @@ $historyResult = mysqli_query($conn, $query);
     <title>Workout Log | ForgeFit</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #ff4d4d;
-            --secondary: #6a00ff;
-            --dark: #0a0a12;
-            --light: #f0f0f0;
-            --accent: #00f0ff;
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 77, 77, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        body {
-            background-color: var(--dark);
-            color: var(--light);
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        h1, h2 {
-            color: var(--primary);
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            border-bottom: 2px solid var(--primary);
-            padding-bottom: 10px;
-            display: inline-block;
-        }
-
-        h2 {
-            font-size: 2rem;
-            margin-top: 40px;
-        }
-
-        .log-form {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 40px;
-            border: 1px solid var(--border);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--accent);
-        }
-
-        select, input {
-            width: 100%;
-            padding: 12px 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--dark);
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-
-        select:focus, input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(255, 77, 77, 0.3);
-        }
-
-        .btn {
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 77, 77, 0.4);
-        }
-
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .history-table th {
-            background: rgba(255, 77, 77, 0.2);
-            color: var(--accent);
-            padding: 15px;
-            text-align: left;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .history-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .history-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .history-table tr:hover {
-            background: rgba(255, 77, 77, 0.05);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: rgba(255, 255, 255, 0.5);
-            font-style: italic;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .log-form {
-                padding: 20px;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
-            
-            h2 {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
+    <Link rel="stylesheet" href="user_workout.css">
 </head>
 <body>
     <div class="container">
@@ -226,8 +62,8 @@ $historyResult = mysqli_query($conn, $query);
                     </div>
                     
                     <div class="form-group">
-                        <label for="reps">Reps</label>
-                        <input type="number" name="reps" id="reps" min="1" required>
+                        <label for="duration">Duration</label>
+                        <input type="number" name="duration" id="duration" min="1" required>
                     </div>
                     
                     <div class="form-group">
@@ -250,8 +86,9 @@ $historyResult = mysqli_query($conn, $query);
                     <th>Date</th>
                     <th>Workout</th>
                     <th>Sets</th>
-                    <th>Reps</th>
+                    <th>Duration</th>
                     <th>Weight</th>
+                    <th>Calories Burned</th>
                 </tr>
             </thead>
             <tbody>
@@ -261,8 +98,9 @@ $historyResult = mysqli_query($conn, $query);
                             <td><?= date('M j, Y', strtotime($log['date'])) ?></td>
                             <td><?= htmlspecialchars($log['workout']) ?></td>
                             <td><?= $log['sets'] ?></td>
-                            <td><?= $log['reps'] ?></td>
+                            <td><?= $log['duration'] ?></td>
                             <td><?= $log['weight'] ?> kg</td>
+                            <td><?= $log['calories_burned'] ?> kcal</td>
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
