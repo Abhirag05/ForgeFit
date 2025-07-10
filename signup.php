@@ -1,47 +1,3 @@
-<?php
-session_start();
-include 'db.php'; // Contains DB connection
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $fullname = trim($_POST['n']);
-    $email    = trim($_POST['email']);
-    $password = $_POST['password'];
-
-    // Server-side validation
-    if (empty($fullname) || empty($email) || empty($password)) {
-        echo "<script>alert('All fields are required.');</script>";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        echo "<script>alert('Invalid email format.');</script>";
-    } elseif (strlen($password) < 6) {
-        echo "<script>alert('Password must be at least 6 characters long.');</script>";
-    } else {
-        // Check for duplicate email
-        $sql = "SELECT id FROM users WHERE email = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result->num_rows > 0) {
-            echo "<script>alert('Email already registered. Please use a different email.');</script>";
-        } else {
-            $password_hashed = password_hash($password, PASSWORD_DEFAULT);
-            $sql = "INSERT INTO users (fullname, email, password) VALUES (?, ?, ?)";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sss", $fullname, $email, $password_hashed);
-
-            if ($stmt->execute()) {
-                echo "<script>alert('Signup successful. You can now login.'); window.location.href='signin.php';</script>";
-            } else {
-                echo "<script>alert('Error: " . addslashes($stmt->error) . "');</script>";
-            }
-        }
-        $stmt->close();
-    }
-}
-$conn->close();
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -233,15 +189,15 @@ $conn->close();
     <form action="" method="POST">
       <div class="input-group">
         <label for="name">Full Name</label>
-        <input type="text" id="name" name="n" required />
+        <input type="text" id="name" name="n"  />
       </div>
       <div class="input-group">
         <label for="email">Email Address</label>
-        <input type="email" id="email" name="email" required />
+        <input type="email" id="email" name="email"  />
       </div>
       <div class="input-group">
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" required />
+        <input type="password" id="password" name="password"  />
         <button type="button" class="toggle-password" aria-label="Show password">
           <svg class="eye-icon-visible" viewBox="0 0 24 24">
             <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
@@ -257,6 +213,126 @@ $conn->close();
       Already have an account? <a href="signin.php">Sign In</a>
     </div>
   </div>
+  
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('form');
+  const nameInput = document.getElementById('name');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const emailGroup = emailInput.closest('.input-group');
+
+  // Message containers
+  const errorBox = document.createElement('div');
+  errorBox.style.marginTop = '10px';
+  errorBox.style.textAlign = 'center';
+  errorBox.style.color = '#ff6666';
+  form.parentNode.insertBefore(errorBox, form.nextSibling);
+
+  const emailStatus = document.createElement('div');
+  emailStatus.style.fontSize = '13px';
+  emailStatus.style.marginTop = '5px';
+  emailStatus.style.color = '#ff6666';
+  emailGroup.appendChild(emailStatus);
+
+  let emailAvailable = false;
+
+  // Email live validation
+  emailInput.addEventListener('blur', async () => {
+    const email = emailInput.value.trim();
+    emailAvailable = false;
+    emailStatus.style.color = '#ff6666';
+
+    if (!email) {
+      emailStatus.textContent = '';
+      return;
+    }
+
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailPattern.test(email)) {
+      emailStatus.textContent = 'Invalid email format.';
+      return;
+    }
+
+    // Call signuphandler.php for email check
+    try {
+      const response = await fetch('signuphandler.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          email: email,
+          check_email: 'true'
+        })
+      });
+      const data = await response.json();
+      if (data.exists) {
+        emailStatus.textContent = 'Email already registered.';
+        emailAvailable = false;
+      } else {
+        emailStatus.textContent = '✓ Email is available';
+        emailStatus.style.color = '#66ff99';
+        emailAvailable = true;
+      }
+    } catch (err) {
+      emailStatus.textContent = 'Unable to check email.';
+    }
+  });
+
+  // Form submit
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    let errorMsg = '';
+
+    if (!name || !email || !password) {
+      errorMsg = 'All fields are required.';
+    } else if (!/^[a-zA-Z\s]{2,50}$/.test(name)) {
+      errorMsg = 'Enter a valid full name (only letters).';
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+      errorMsg = 'Invalid email format.';
+    } else if (password.length < 6) {
+      errorMsg = 'Password must be at least 6 characters long.';
+    } 
+    if (errorMsg) {
+      errorBox.textContent = errorMsg;
+      errorBox.style.color = '#ff6666';
+      return;
+    }
+
+    errorBox.textContent = '';
+
+    try {
+      const response = await fetch('signuphandler.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          n: name,
+          email: email,
+          password: password
+        })
+      });
+
+      const data = await response.json();
+      if (data.status === 'success') {
+        errorBox.style.color = '#66ff99';
+        errorBox.textContent = data.message;
+        setTimeout(() => {
+          window.location.href = 'signin.php';
+        }, 1500);
+      } else {
+        errorBox.style.color = '#ff6666';
+        errorBox.textContent = data.message;
+      }
+    } catch (err) {
+      errorBox.textContent = 'Something went wrong. Please try again.';
+    }
+  });
+});
+</script>
+
+
 
   <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   <script>

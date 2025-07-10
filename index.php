@@ -517,7 +517,7 @@
   <section class="hero">
     <h1>Transform Your Fitness Journey</h1>
     <p>Track workouts, meals, and progress with our gamified fitness platform. Level up your health like never before.</p>
-    <button class="cta-btn"><a href="signin.html">Get Started</a></button>
+   <a href="signin.php"> <button class="cta-btn">Get Started</button></a>
   </section>
 
   <!-- Features Section -->

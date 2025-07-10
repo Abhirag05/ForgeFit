@@ -1,69 +1,133 @@
 <?php
-
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
     die("Access denied. Please log in.");
 }
+
 include '../db.php';
+
 $fullName = $_SESSION['n'];
-// Collect data
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-$userId = $_SESSION['user_id'];
-$dob = $_POST['dob'];
-$gender = $_POST['gender'];
-$primaryGoal = $_POST['primaryGoal'];
-$targetWeight = !empty($_POST['targetWeight']) ? $_POST['targetWeight'] : NULL;
-$weeklyGoal = !empty($_POST['weeklyGoal']) ? $_POST['weeklyGoal'] : NULL;
-$activityLevel = !empty($_POST['activityLevel']) ? $_POST['activityLevel'] : NULL;
-$height = $_POST['height'];
-$weight = $_POST['weight'];
-$workoutTypes = isset($_POST['workoutTypes']) ? implode(',', $_POST['workoutTypes']) : NULL;
-$workoutFrequency = !empty($_POST['workoutFrequency']) ? $_POST['workoutFrequency'] : NULL;
-$workoutDuration = !empty($_POST['workoutDuration']) ? $_POST['workoutDuration'] : NULL;
+$user_id = $_SESSION['user_id'];
 
-// Check if profile already exists for user
-$check = $conn->prepare("SELECT id FROM fitness_profiles WHERE user_id = ?");
-$check->bind_param("i", $userId);
-$check->execute();
-$check->store_result();
+// Initialize variables
+$age = $gender = $primary_goal = $activity_level = $height_cm = $weight_kg = "";
+$button_label = "Save Profile";
+$heading_message = "Complete Your Fitness Profile";
+$heading_text = "By filling the details you can find your maintenance calorie";
+$profile_image = "default-avatar.png";
 
-if ($check->num_rows > 0) {
-    // Update existing profile
-    $stmt = $conn->prepare("
-        UPDATE fitness_profiles SET 
-         dob=?, gender=?, primary_goal=?, target_weight=?, weekly_goal=?, activity_level=?, 
-            height=?, weight=?, workout_types=?, workout_frequency=?, workout_duration=?
-        WHERE user_id=?
-    ");
-    $stmt->bind_param(
-        "sssdssddsssi",
-         $dob, $gender, $primaryGoal, $targetWeight, $weeklyGoal, $activityLevel,
-        $height, $weight, $workoutTypes, $workoutFrequency, $workoutDuration,
-        $userId
-    );
-} else {
-    // Insert new profile
-    $stmt = $conn->prepare("
-        INSERT INTO fitness_profiles 
-        (user_id,dob, gender, primary_goal, target_weight, weekly_goal, activity_level, height, weight, workout_types, workout_frequency, workout_duration)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ");
-    $stmt->bind_param(
-        "issssdssddsss",
-        $userId, $dob, $gender, $primaryGoal, $targetWeight, $weeklyGoal,
-        $activityLevel, $height, $weight, $workoutTypes, $workoutFrequency, $workoutDuration
-    );
+// Check if user already has a profile
+$sql = "SELECT * FROM user_fitness_profiles WHERE user_id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    $profile = $result->fetch_assoc();
+    $age = $profile['age'];
+    $gender = $profile['gender'];
+    $primary_goal = $profile['primary_goal'];
+    $activity_level = $profile['activity_level'];
+    $height_cm = $profile['height_cm'];
+    $weight_kg = $profile['weight_kg'];
+    $button_label = "Update Profile";
+    $heading_message = "Your Profile is Already Set";
+    $heading_text = "By updating details you can find your new maintenance calorie";
+    $profile_image = $profile['profile_image'] ?? "default-avatar.png";
 }
-
-if ($stmt->execute()) {
-    echo "<h2 style='text-align:center;color:green;'>Fitness profile saved successfully!</h2>";
-} else {
-    echo "Error: " . $stmt->error;
-}
-
 $stmt->close();
-$conn->close();
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Get form data
+    $age = intval($_POST['dob']);
+    $gender = $_POST['gender'];
+    $primary_goal = $_POST['primaryGoal'];
+    $activity_level = floatval($_POST['activityLevel']);
+    $height_cm = floatval($_POST['height']);
+    $weight_kg = floatval($_POST['weight']);
+
+    // Calculate BMR and maintenance calories
+    $bmr = (10 * $weight_kg) + (6.25 * $height_cm) - (5 * $age) + ($gender === 'male' ? 5 : -161);
+    $maintenance_calories = $bmr * $activity_level;
+
+    // Handle file upload
+    $uploadSuccess = true;
+    $newProfileImage = $profile_image; // Default to existing image
+    
+    if (isset($_FILES['profileImage']) && $_FILES['profileImage']['error'] === UPLOAD_ERR_OK) {
+        $upload_dir = '../uploads/';
+        
+        // Create upload directory if it doesn't exist
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0755, true);
+        }
+        
+        // Validate file
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+        $file_type = $_FILES['profileImage']['type'];
+        $file_size = $_FILES['profileImage']['size'];
+        
+        if (in_array($file_type, $allowed_types) && $file_size < 2000000) { // 2MB max
+            // Generate unique filename
+            $file_ext = pathinfo($_FILES['profileImage']['name'], PATHINFO_EXTENSION);
+            $new_filename = 'profile_' . $user_id . '_' . time() . '.' . $file_ext;
+            $image_path = $upload_dir . $new_filename;
+            
+            if (move_uploaded_file($_FILES['profileImage']['tmp_name'], $image_path)) {
+                $newProfileImage = $new_filename;
+                
+                // Delete old image if it's not the default
+                if ($profile_image !== "default-avatar.png" && file_exists($upload_dir . $profile_image)) {
+                    unlink($upload_dir . $profile_image);
+                }
+            } else {
+                $uploadSuccess = false;
+                echo "<script>alert('Error uploading profile image.');</script>";
+            }
+        } else {
+            $uploadSuccess = false;
+            echo "<script>alert('Invalid image file. Please upload a JPEG, PNG, or GIF under 2MB.');</script>";
+        }
+    }
+
+    // Only proceed with database update if upload was successful or no upload was attempted
+    if ($uploadSuccess) {
+        // Check if profile exists
+        $check = $conn->prepare("SELECT profile_id FROM user_fitness_profiles WHERE user_id = ?");
+        $check->bind_param("i", $user_id);
+        $check->execute();
+        $check_result = $check->get_result();
+
+        if ($check_result->num_rows > 0) {
+            // UPDATE
+            $stmt = $conn->prepare("UPDATE user_fitness_profiles SET 
+                age=?, gender=?, primary_goal=?, activity_level=?, height_cm=?, weight_kg=?, 
+                maintenance_calories=?, profile_image=?
+                WHERE user_id=?");
+            $stmt->bind_param("isssdddsi", $age, $gender, $primary_goal, $activity_level, 
+                $height_cm, $weight_kg, $maintenance_calories, $newProfileImage, $user_id);
+        } else {
+            // INSERT
+            $stmt = $conn->prepare("INSERT INTO user_fitness_profiles 
+                (user_id, age, gender, primary_goal, activity_level, height_cm, weight_kg, 
+                maintenance_calories, profile_image) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("iisssddds", $user_id, $age, $gender, $primary_goal, 
+                $activity_level, $height_cm, $weight_kg, $maintenance_calories, $newProfileImage);
+        }
+
+        if ($stmt->execute()) {
+            $profile_image = $newProfileImage; // Update for display
+            echo "<script>alert('Profile saved successfully!'); window.location.href='user_home.php';</script>";
+        } else {
+            echo "<script>alert('Error saving profile: " . $stmt->error . "');</script>";
+        }
+        
+        $stmt->close();
+    }
 }
 ?>
 
@@ -72,11 +136,18 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complete Your Fitness Profile</title>
+    <title>Fitness Profile</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: #0a0a12;
+            color: #f0f0f0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
         }
         .profile-container {
             max-width: 700px;
@@ -104,43 +175,79 @@ $conn->close();
             content: " *";
             color: red;
         }
+        input[type="file"]::-webkit-file-upload-button {
+            visibility: hidden;
+        }
+        input[type="file"]::before {
+            content: 'Choose image';
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        #particles-js {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background: linear-gradient(135deg, #000000, #0b0016, #0f0c29);
+        }
     </style>
 </head>
 <body>
+    <div id="particles-js"></div>
     <div class="container">
-        <div class="profile-container">
-            <div class="profile-header">
-                <h1>Complete Your Fitness Profile</h1>
-                <p class="text-muted">Help us personalize your fitness experience by providing these details</p>
+        <div class="profile-container">    
+            <form action="" method="POST" enctype="multipart/form-data">
+                <div class="profile-header">
+                <h1><?= htmlspecialchars($heading_message) ?></h1>
+                <p class="text-muted"><?= htmlspecialchars($heading_text) ?></p>
+                <div class="text-center position-relative mb-3">
+                    <img id="profilePreview" src="../uploads/<?= htmlspecialchars($profile_image) ?>" 
+                         class="rounded-circle border" alt="Profile Image" width="120" height="120" 
+                         style="object-fit: cover;" onerror="this.src='../uploads/default-avatar.png'">
+                    <label for="profileImage" class="position-absolute top-0 end-0 translate-middle badge rounded-circle bg-primary" 
+                           style="cursor:pointer; width:30px; height:30px;" title="Edit Photo">
+                        <i class="bi bi-pencil-fill text-white" style="font-size: 0.9rem;"></i>
+                    </label>
+                    <input type="file" id="profileImage" name="profileImage" accept="image/*" 
+                           style="display: none;" onchange="previewImage(event)">
+                </div>
             </div>
-
-            <form action="" method="POST">
                 <!-- Personal Information Section -->
                 <div class="form-section">
                     <h3>Personal Information</h3>
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="firstName" class="form-label required-field">Name</label>
-                          <input type="text" class="form-control" id="firstName" name="firstName" required value="<?= htmlspecialchars($fullName) ?>">
+                            <input type="text" class="form-control" id="firstName" name="firstName" disabled 
+                                   value="<?= htmlspecialchars($fullName) ?>">
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="dob" class="form-label required-field">Date of Birth</label>
-                        <input type="date" class="form-control" id="dob" name="dob" required>
+                        <label for="dob" class="form-label required-field">Age</label>
+                        <input type="number" class="form-control" id="dob" name="dob" required 
+                               min="10" max="120" value="<?= htmlspecialchars($age) ?>">
                     </div>
                     <div class="mb-3">
                         <label class="form-label required-field">Gender</label>
                         <div>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="gender" id="male" value="male" required>
+                                <input class="form-check-input" type="radio" name="gender" id="male" 
+                                       value="male" <?= $gender === 'male' ? 'checked' : '' ?> required>
                                 <label class="form-check-label" for="male">Male</label>
                             </div>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="gender" id="female" value="female">
+                                <input class="form-check-input" type="radio" name="gender" id="female" 
+                                       value="female" <?= $gender === 'female' ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="female">Female</label>
                             </div>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="gender" id="other" value="other">
+                                <input class="form-check-input" type="radio" name="gender" id="other" 
+                                       value="other" <?= $gender === 'other' ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="other">Other</label>
                             </div>
                         </div>
@@ -153,38 +260,23 @@ $conn->close();
                     <div class="mb-3">
                         <label for="primaryGoal" class="form-label required-field">Primary Fitness Goal</label>
                         <select class="form-select" id="primaryGoal" name="primaryGoal" required>
-                            <option value="" selected disabled>Select your primary goal</option>
-                            <option value="weight_loss">Weight Loss</option>
-                            <option value="muscle_gain">Muscle Gain</option>
-                            <option value="maintenance">Maintenance</option>
-                            <option value="endurance">Endurance Training</option>
-                            <option value="sport_specific">Sport-Specific Training</option>
+                            <option value="" disabled <?= $primary_goal == '' ? 'selected' : '' ?>>Select your primary goal</option>
+                            <option value="weight_loss" <?= $primary_goal == 'weight_loss' ? 'selected' : '' ?>>Weight Loss</option>
+                            <option value="muscle_gain" <?= $primary_goal == 'muscle_gain' ? 'selected' : '' ?>>Muscle Gain</option>
+                            <option value="maintenance" <?= $primary_goal == 'maintenance' ? 'selected' : '' ?>>Maintenance</option>
+                            <option value="endurance" <?= $primary_goal == 'endurance' ? 'selected' : '' ?>>Endurance Training</option>
+                            <option value="sport_specific" <?= $primary_goal == 'sport_specific' ? 'selected' : '' ?>>Sport-Specific Training</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="targetWeight" class="form-label">Target Weight (kg)</label>
-                        <input type="number" class="form-control" id="targetWeight" name="targetWeight" step="0.1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="weeklyGoal" class="form-label">Weekly Goal</label>
-                        <select class="form-select" id="weeklyGoal" name="weeklyGoal">
-                            <option value="" selected disabled>Select weekly goal</option>
-                            <option value="lose_0.5kg">Lose 0.5kg per week</option>
-                            <option value="lose_1kg">Lose 1kg per week</option>
-                            <option value="gain_0.5kg">Gain 0.5kg per week</option>
-                            <option value="gain_1kg">Gain 1kg per week</option>
-                            <option value="maintain">Maintain current weight</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Activity Level</label>
-                        <select class="form-select" id="activityLevel" name="activityLevel">
-                            <option value="" selected disabled>Select your activity level</option>
-                            <option value="sedentary">Sedentary (little or no exercise)</option>
-                            <option value="light">Lightly active (light exercise 1-3 days/week)</option>
-                            <option value="moderate">Moderately active (moderate exercise 3-5 days/week)</option>
-                            <option value="active">Very active (hard exercise 6-7 days/week)</option>
-                            <option value="extreme">Extremely active (very hard exercise & physical job)</option>
+                        <label class="form-label required-field">Activity Level</label>
+                        <select class="form-select" id="activityLevel" name="activityLevel" required>
+                            <option value="" disabled <?= $activity_level == '' ? 'selected' : '' ?>>Select your activity level</option>
+                            <option value="1.2" <?= $activity_level == 1.2 ? 'selected' : '' ?>>Sedentary (little or no exercise)</option>
+                            <option value="1.375" <?= $activity_level == 1.375 ? 'selected' : '' ?>>Lightly active (light exercise 1–3 days/week)</option>
+                            <option value="1.55" <?= $activity_level == 1.55 ? 'selected' : '' ?>>Moderately active (moderate exercise 3–5 days/week)</option>
+                            <option value="1.725" <?= $activity_level == 1.725 ? 'selected' : '' ?>>Very active (hard exercise 6–7 days/week)</option>
+                            <option value="1.9" <?= $activity_level == 1.9 ? 'selected' : '' ?>>Extremely active (very hard exercise & physical job)</option>
                         </select>
                     </div>
                 </div>
@@ -195,70 +287,61 @@ $conn->close();
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="height" class="form-label required-field">Height (cm)</label>
-                            <input type="number" class="form-control" id="height" name="height" required>
+                            <input type="number" class="form-control" id="height" name="height" step="0.1" 
+                                   min="100" max="250" required value="<?= htmlspecialchars($height_cm) ?>">
                         </div>
                         <div class="col-md-6">
                             <label for="weight" class="form-label required-field">Current Weight (kg)</label>
-                            <input type="number" class="form-control" id="weight" name="weight" step="0.1" required>
+                            <input type="number" class="form-control" id="weight" name="weight" step="0.1" 
+                                   min="30" max="300" required value="<?= htmlspecialchars($weight_kg) ?>">
                         </div>
-                    </div>
-                    
-                </div>
-                <!-- Workout Preferences -->
-                <div class="form-section">
-                    <h3>Workout Preferences</h3>
-                    <div class="mb-3">
-                        <label class="form-label">Preferred Workout Types (Select all that apply)</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="strengthTraining" name="workoutTypes[]" value="strength">
-                            <label class="form-check-label" for="strengthTraining">Strength Training</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="cardio" name="workoutTypes[]" value="cardio">
-                            <label class="form-check-label" for="cardio">Cardio</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="hiit" name="workoutTypes[]" value="hiit">
-                            <label class="form-check-label" for="hiit">HIIT</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="yoga" name="workoutTypes[]" value="yoga">
-                            <label class="form-check-label" for="yoga">Yoga/Pilates</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="sports" name="workoutTypes[]" value="sports">
-                            <label class="form-check-label" for="sports">Sports</label>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="workoutFrequency" class="form-label">How many days per week do you typically exercise?</label>
-                        <select class="form-select" id="workoutFrequency" name="workoutFrequency">
-                            <option value="" selected disabled>Select frequency</option>
-                            <option value="0">0 days (I don't exercise)</option>
-                            <option value="1-2">1-2 days</option>
-                            <option value="3-4">3-4 days</option>
-                            <option value="5-6">5-6 days</option>
-                            <option value="7">7 days</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="workoutDuration" class="form-label">Typical workout duration</label>
-                        <select class="form-select" id="workoutDuration" name="workoutDuration">
-                            <option value="" selected disabled>Select duration</option>
-                            <option value="30">30 minutes or less</option>
-                            <option value="45">45 minutes</option>
-                            <option value="60">60 minutes</option>
-                            <option value="75">75 minutes</option>
-                            <option value="90">90 minutes or more</option>
-                        </select>
                     </div>
                 </div>
 
                 <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary btn-lg">Save Profile</button>
+                    <button type="submit" class="btn btn-primary btn-lg"><?= htmlspecialchars($button_label) ?></button>
                 </div>
             </form>
         </div>
     </div>
+
+    <script>
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const preview = document.getElementById('profilePreview');
+                preview.src = reader.result;
+            };
+            if (event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            }
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize particles.js
+      particlesJS("particles-js", {
+        "particles": {
+          "number": { "value": 100, "density": { "enable": true, "value_area": 800 } },
+          "color": { "value": "#a64aff" },
+          "shape": { "type": "circle" },
+          "opacity": { "value": 0.4, "random": true },
+          "size": { "value": 3, "random": true },
+          "line_linked": { "enable": true, "distance": 120, "color": "#6a00ff", "opacity": 0.3, "width": 1 },
+          "move": { "enable": true, "speed": 2, "direction": "none", "random": true, "out_mode": "out" }
+        },
+        "interactivity": {
+          "detect_on": "canvas",
+          "events": {
+            "onhover": { "enable": true, "mode": "repulse" },
+            "onclick": { "enable": true, "mode": "push" }
+          }
+        }
+      });
+    });
+     </script>
 </body>
 </html>
