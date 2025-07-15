@@ -34,6 +34,7 @@ $historyResult = mysqli_query($conn, $query);
     <title>Workout Log | ForgeFit</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+     <link rel="icon" href="../assets/images/logo.png" type="image/x-icon">
     <style>
         * {
             margin: 0;
@@ -178,7 +179,6 @@ $historyResult = mysqli_query($conn, $query);
         }
 
         h1, h2 {
-            color: var(--primary);
             margin-bottom: 20px;
             font-weight: 600;
         }
@@ -507,7 +507,7 @@ $historyResult = mysqli_query($conn, $query);
     <div class="dashboard-container">
         <!-- Horizontal Navbar -->
         <nav class="navbar">
-            <a href="#" class="navbar-brand">
+            <a href="user_home.php" class="navbar-brand">
                 <i class="fas fa-dumbbell logo-icon"></i>
                 <h2>ForgeFit</h2>
             </a>

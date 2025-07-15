@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['n'] = $user['fullname'];
         
         if ($user['role'] == 'admin') {
-            header("Location: admin_dashboard/admin_home.php");
+            header("Location: admin_dashboard/admin_layout.php");
         } else {
             header("Location:user_dashboard/user_home.php");
         }
@@ -37,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+   <link rel="icon" href="assets/images/logo.png" type="image/x-icon">
   <title>Sign In</title>
   <style>
     * {

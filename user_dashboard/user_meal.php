@@ -34,6 +34,7 @@ $historyResult = mysqli_query($conn, $historyQuery);
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Log Meal | ForgeFit</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+   <link rel="icon" href="../assets/images/logo.png" type="image/x-icon">
   <style>
     body {
       font-family: 'Poppins', sans-serif;

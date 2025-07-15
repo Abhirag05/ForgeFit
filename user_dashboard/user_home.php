@@ -32,6 +32,7 @@ $workoutData = [
     <title>Dashboard | ForgeFit</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+     <link rel="icon" href="../assets/images/logo.png" type="image/x-icon">
     <style>
         * {
             margin: 0;
@@ -46,7 +47,7 @@ $workoutData = [
         line-height: 1.6;
         }
 
-            #particles-js {
+        #particles-js {
             position: fixed;
             width: 100%;
             height: 100%;
@@ -501,18 +502,19 @@ $workoutData = [
 
             <!-- Quick Actions -->
             <div class="quick-actions">
+               <a href="user_workout.php">
                 <button class="action-btn">
                     <div class="action-icon">
                         <i class="fas fa-plus"></i>
                     </div>
                     <span class="action-label">Log Workout</span>
-                </button>
-                <button class="action-btn">
+                </button></a>
+              <a href="user_meal.php"> <button class="action-btn">
                     <div class="action-icon">
                         <i class="fas fa-utensils"></i>
                     </div>
                     <span class="action-label">Add Meal</span>
-                </button>
+                </button> </a> 
                 <button class="action-btn">
                     <div class="action-icon">
                         <i class="fas fa-tint"></i>
