@@ -44,7 +44,7 @@ if (empty($fullname) || empty($email) || empty($password)) {
         echo json_encode(["status" => "error", "message" => "Email already registered."]);
     } else {
         $password_hashed = password_hash($password, PASSWORD_DEFAULT);
-        $sql = "INSERT INTO users (fullname, email, password) VALUES (?, ?, ?)";
+        $sql = "INSERT INTO users (fullname, email, password, joined_date) VALUES (?, ?, ?, NOW())";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("sss", $fullname, $email, $password_hashed);
 

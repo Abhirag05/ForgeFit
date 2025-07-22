@@ -1,3 +1,79 @@
+<style>
+    .card {
+            background: rgba(255,255,255,0.13) !important;
+            border: none;
+            border-radius: 14px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.13);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 20px;
+            backdrop-filter: blur(4px);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 8px 32px rgba(166, 74, 255, 0.13);
+        }
+        
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+        
+        .stat-card .card-body {
+            text-align: center;
+        }
+        
+        .stat-card .card-title {
+            font-size: 1rem;
+            color: #d1c4e9;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card .card-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(106,0,255,0.08);
+        }
+        
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .table thead {
+            background: rgba(44, 62, 80, 0.85);
+            color: #fff;
+        }
+        
+        .badge-active {
+            background: linear-gradient(90deg, #2ecc71, #10b981);
+            color: #fff;
+        }
+        
+        .badge-inactive {
+            background: linear-gradient(90deg, #e74c3c, #ff4d4d);
+            color: #fff;
+        }
+        
+        .navbar-brand img {
+            height: 40px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        /* Make sure all text is visible on transparent backgrounds */
+        .card, .card * {
+            color: #fff !important;
+        }
+        .table, .table th, .table td {
+            color: #fff;
+        }
+        
+</style>
 <!-- Dashboard title -->
 <h2 class="mb-4">Dashboard Overview</h2>
 

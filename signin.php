@@ -14,21 +14,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $result = $stmt->get_result();
     $user   = $result->fetch_assoc();
 
-    if ($user && password_verify($password, $user['password'])) {
-       session_regenerate_id(true);
+   if ($user) {
+    if ($user['is_banned'] == 1) {
+       echo "<script>
+        alert('Your account is banned. Please contact admin.');
+        window.location.href = 'signin.php'; </script>";
+        exit();
+    }
+
+    if (password_verify($password, $user['password'])) {
+        session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['role']    = $user['role'];
-        $_SESSION['n'] = $user['fullname'];
-        
+        $_SESSION['n']       = $user['fullname'];
+
         if ($user['role'] == 'admin') {
             header("Location: admin_dashboard/admin_layout.php");
         } else {
-            header("Location:user_dashboard/user_home.php");
+            header("Location: user_dashboard/user_home.php");
         }
         exit();
     } else {
-       echo "<script>alert('Invalid email or password.');</script>";
+        echo "<script>alert('Invalid email or password.');</script>";
     }
+} else {
+    echo "<script>alert('User not found.');</script>";
+}
+    $stmt->close();
+    $conn->close();
 }
 ?>
 

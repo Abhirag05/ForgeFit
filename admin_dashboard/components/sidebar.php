@@ -83,23 +83,13 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="admin_layout.php?page=workouts">
+                    <a class="nav-link" href="admin_layout.php?page=admin_workout">
                         <i class="fas fa-dumbbell"></i> Workouts
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="admin_layout.php?page=nutrition">
-                        <i class="fas fa-apple-alt"></i> Nutrition Plans
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="admin_layout.php?page=xp-system">
                         <i class="fas fa-trophy"></i> XP System
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="admin_layout.php?page=reports">
-                        <i class="fas fa-chart-bar"></i> Reports
                     </a>
                 </li>
                 <li class="nav-item">

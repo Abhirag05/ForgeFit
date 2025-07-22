@@ -1,13 +1,31 @@
 <?php
 include '../db.php';
 
+// Handle add workout
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_workout'])) {
+    $workout_name = trim($_POST['name']);
+    $MET = $_POST['MET'];
+    if ($workout_name && $MET) {
+        $stmt = $conn->prepare("INSERT INTO all_workouts (name, MET) VALUES (?, ?)");
+        $stmt->bind_param("sd", $workout_name,$MET);
+        $stmt->execute();
+        $_SESSION['message'] = "Workout added successfully!";
+        $_SESSION['msg_type'] = "success";
+    } else {
+        $_SESSION['message'] = "Please fill all required fields correctly.";
+        $_SESSION['msg_type'] = "error";
+    }
+    echo "<script>window.location.href='admin_layout.php?page=admin_workout';</script>";
+    exit();
+}
+
 // Handle delete
 if (isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
-    $conn->query("DELETE FROM meals WHERE meal_id = $delete_id");
-    $_SESSION['message'] = "Meal deleted successfully!";
-    $_SESSION['msg_type'] = "error";
-    echo "<script>window.location.href='admin_layout.php?page=admin_meals';</script>";
+    $conn->query("DELETE FROM all_workouts WHERE id = $delete_id");
+    $_SESSION['message'] = "Workout deleted successfully!";
+    $_SESSION['msg_type'] = "success";
+    header("Location:admin_layout.php?page=admin_workout");
     exit();
 }
 
@@ -18,23 +36,24 @@ $page = max($page, 1);
 $offset = ($page - 1) * $results_per_page;
 
 // Sorting
-$sort = isset($_GET['sort']) ? $_GET['sort'] : 'meal_id';
+$sort = isset($_GET['sort']) ? $_GET['sort'] : 'id';
 $order = isset($_GET['order']) ? $_GET['order'] : 'DESC';
-$valid_sort_columns = ['meal_id', 'food_name', 'calories', 'protein', 'carbs', 'fat'];
-$sort = in_array($sort, $valid_sort_columns) ? $sort : 'meal_id';
+$valid_sort_columns = ['id', 'name', 'MET'];
+$sort = in_array($sort, $valid_sort_columns) ? $sort : 'id';
 $order = $order === 'ASC' ? 'ASC' : 'DESC';
 
-// Get total number of meals
-$total_results = $conn->query("SELECT COUNT(*) as total FROM meals")->fetch_assoc()['total'];
+// Get total number of workouts
+$total_results = $conn->query("SELECT COUNT(*) as total FROM all_workouts")->fetch_assoc()['total'];
 $total_pages = ceil($total_results / $results_per_page);
 
-// Get meals for current page
-$result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset, $results_per_page");
+// Get workouts for current page
+$result = $conn->query("SELECT * FROM all_workouts ORDER BY $sort $order LIMIT $offset, $results_per_page");
 ?>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+    /* Reuse all the same styles from meals management */
     * {
         margin: 0;
         padding: 0;
@@ -49,6 +68,15 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
         border-radius: 12px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         color: black;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
     }
     
     .page-title {
@@ -94,6 +122,7 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
         margin-bottom: 2rem;
         overflow: hidden;
         color: black;
+        backdrop-filter: blur(5px);
     }
     
     .card-header {
@@ -102,10 +131,97 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
         align-items: center;
         padding: 1rem 1.5rem;
         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        background-color: rgba(248, 250, 252, 0.9);
+    }
+    
+    .workout-card-title {
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: black;
     }
     
     .card-body {
         padding: 1.5rem;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: white;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        background-color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #4361ee;
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        font-size: 0.9rem;
+        gap: 0.5rem;
+    }
+    
+    .btn-primary {
+        background-color: #4361ee;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: #3a56d4;
+    }
+    
+    .btn-danger {
+        background-color: #f72585;
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background-color: #e5177b;
+    }
+    
+    .btn-warning {
+        background-color: #f8961e;
+        color: white;
+    }
+    
+    .btn-warning:hover {
+        background-color: #e0871b;
+    }
+    
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
     }
     
     .table-responsive {
@@ -115,9 +231,11 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
     .table {
         width: 100%;
         border-collapse: collapse;
+        background-color: rgba(255, 255, 255, 0.9);
     }
     
     .table th {
+        background-color: rgba(248, 250, 252, 0.9);
         padding: 1rem;
         text-align: left;
         font-weight: 600;
@@ -225,50 +343,18 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
         pointer-events: none;
     }
     
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-        border: none;
-        font-size: 0.9rem;
-        gap: 0.5rem;
+    .add-workout-form {
+        display: none;
+        animation: fadeIn 0.3s ease-in-out;
     }
     
-    .btn-primary {
-        background-color: #4361ee;
-        color: white;
+    .add-workout-form.show {
+        display: block;
     }
     
-    .btn-primary:hover {
-        background-color: #3a56d4;
-    }
-    
-    .btn-danger {
-        background-color: #f72585;
-        color: white;
-    }
-    
-    .btn-danger:hover {
-        background-color: #e5177b;
-    }
-    
-    .btn-warning {
-        background-color: #f8961e;
-        color: white;
-    }
-    
-    .btn-warning:hover {
-        background-color: #e0871b;
-    }
-    
-    .btn-sm {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
+    .add-workout-btn-container {
+        text-align: center;
+        margin: 1.5rem 0;
     }
     
     @keyframes fadeIn {
@@ -279,6 +365,10 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
     @media (max-width: 768px) {
         .container {
             padding: 1rem;
+        }
+        
+        .form-grid {
+            grid-template-columns: 1fr;
         }
         
         .action-btns {
@@ -305,6 +395,10 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
 </style>
 
 <div class="container">
+    <div class="page-header">
+        <h1 class="page-title">Workout Management</h1>
+    </div>
+    
     <?php if (isset($_SESSION['message'])): ?>
         <div class="alert alert-<?= $_SESSION['msg_type'] === 'success' ? 'success' : 'error' ?>">
             <span><?= $_SESSION['message'] ?></span>
@@ -315,30 +409,23 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
     
     <div class="card">
         <div class="card-header">
-            <h1 class="page-title">Meals Management</h1>
+            <h3 class="workout-card-title">Workout Database</h3>
             <div class="search-container">
-                <input type="text" id="searchInput" class="search-input" placeholder="Search meals...">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search workouts...">
                 <button class="search-btn"><i class="fas fa-search"></i></button>
             </div>
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table" id="mealsTable">
+                <table class="table" id="workoutsTable">
                     <thead>
                         <tr>
-                            <th class="<?= $sort === 'meal_id' ? ($order === 'ASC' ? 'sort-asc' : 'sort-desc') : '' ?>"
-                                onclick="sortTable('meal_id', '<?= $sort === 'meal_id' && $order === 'DESC' ? 'ASC' : 'DESC' ?>')">ID</th>
-                            <th class="<?= $sort === 'food_name' ? ($order === 'ASC' ? 'sort-asc' : 'sort-desc') : '' ?>"
-                                onclick="sortTable('food_name', '<?= $sort === 'food_name' && $order === 'DESC' ? 'ASC' : 'DESC' ?>')">Food Name</th>
-                            <th>Unit</th>
-                            <th class="<?= $sort === 'calories' ? ($order === 'ASC' ? 'sort-asc' : 'sort-desc') : '' ?>"
-                                onclick="sortTable('calories', '<?= $sort === 'calories' && $order === 'DESC' ? 'ASC' : 'DESC' ?>')">Calories</th>
-                            <th class="<?= $sort === 'protein' ? ($order === 'ASC' ? 'sort-asc' : 'sort-desc') : '' ?>"
-                                onclick="sortTable('protein', '<?= $sort === 'protein' && $order === 'DESC' ? 'ASC' : 'DESC' ?>')">Protein</th>
-                            <th class="<?= $sort === 'carbs' ? ($order === 'ASC' ? 'sort-asc' : 'sort-desc') : '' ?>"
-                                onclick="sortTable('carbs', '<?= $sort === 'carbs' && $order === 'DESC' ? 'ASC' : 'DESC' ?>')">Carbs</th>
-                            <th class="<?= $sort === 'fat' ? ($order === 'ASC' ? 'sort-asc' : 'sort-desc') : '' ?>"
-                                onclick="sortTable('fat', '<?= $sort === 'fat' && $order === 'DESC' ? 'ASC' : 'DESC' ?>')">Fat</th>
+                            <th class="<?= $sort === 'id' ? ($order === 'ASC' ? 'sort-asc' : 'sort-desc') : '' ?>"
+                                onclick="sortTable('id', '<?= $sort === 'id' && $order === 'DESC' ? 'ASC' : 'DESC' ?>')">ID</th>
+                            <th class="<?= $sort === 'name' ? ($order === 'ASC' ? 'sort-asc' : 'sort-desc') : '' ?>"
+                                onclick="sortTable('name', '<?= $sort === 'name' && $order === 'DESC' ? 'ASC' : 'DESC' ?>')">Workout Name</th>
+                            <th class="<?= $sort === 'MET' ? ($order === 'ASC' ? 'sort-asc' : 'sort-desc') : '' ?>"
+                                onclick="sortTable('MET', '<?= $sort === 'MET' && $order === 'DESC' ? 'ASC' : 'DESC' ?>')">MET</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -346,18 +433,14 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
                         <?php if ($result->num_rows > 0): ?>
                             <?php while ($row = $result->fetch_assoc()): ?>
                             <tr>
-                                <td><?= $row['meal_id'] ?></td>
-                                <td><?= htmlspecialchars($row['food_name']) ?></td>
-                                <td><?= htmlspecialchars($row['unit']) ?></td>
-                                <td><?= number_format($row['calories'], 2) ?></td>
-                                <td><?= number_format($row['protein'], 2) ?></td>
-                                <td><?= number_format($row['carbs'], 2) ?></td>
-                                <td><?= number_format($row['fat'], 2) ?></td>
+                                <td><?= $row['id'] ?></td>
+                                <td><?= htmlspecialchars($row['name']) ?></td>
+                                <td><?= $row['MET'] ?></td>
                                 <td class="action-btns">
-                                    <a href="admin_layout.php?page=admin_add_update_meal&edit_id=<?= $row['meal_id'] ?>" class="btn btn-warning btn-sm">
+                                    <a href="admin_layout.php?page=edit_workout&id=<?= $row['id'] ?>" class="btn btn-warning btn-sm">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
-                                    <a href="admin_layout.php?page=admin_meals&delete_id=<?= $row['meal_id'] ?>" onclick="return confirm('Are you sure you want to delete this meal?')" class="btn btn-danger btn-sm">
+                                    <a href="admin_workout.php?delete_id=<?= $row['id'] ?>" onclick="return confirm('Are you sure you want to delete this workout?')" class="btn btn-danger btn-sm">
                                         <i class="fas fa-trash-alt"></i> Delete
                                     </a>
                                 </td>
@@ -365,8 +448,8 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
                             <?php endwhile; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="8" style="text-align: center; padding: 2rem; color: #6c757d;">
-                                    No meals found in the database.
+                                <td colspan="7" style="text-align: center; padding: 2rem; color: #6c757d;">
+                                    No workouts found in the database.
                                 </td>
                             </tr>
                         <?php endif; ?>
@@ -382,7 +465,7 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
                 $prev_disabled = ($page <= 1) ? 'disabled' : '';
                 ?>
                 <li class="page-item <?= $prev_disabled ?>">
-                    <a class="page-link" href="admin_layout.php?page=admin_meals&p=<?= $prev_page ?>&sort=<?= $sort ?>&order=<?= $order ?>">
+                    <a class="page-link" href="admin_layout.php?page=admin_workout&p=<?= $prev_page ?>&sort=<?= $sort ?>&order=<?= $order ?>">
                         <i class="fas fa-chevron-left"></i> Previous
                     </a>
                 </li>
@@ -391,7 +474,7 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
                 // Show first page if not in initial range
                 if ($page > 3): ?>
                     <li class="page-item">
-                        <a class="page-link" href="admin_layout.php?page=admin_meals&p=1&sort=<?= $sort ?>&order=<?= $order ?>">1</a>
+                        <a class="page-link" href="admin_layout.php?page=admin_workout&p=1&sort=<?= $sort ?>&order=<?= $order ?>">1</a>
                     </li>
                     <?php if ($page > 4): ?>
                         <li class="page-item disabled">
@@ -407,7 +490,7 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
                 
                 for ($i = $start; $i <= $end; $i++): ?>
                     <li class="page-item <?= $i === $page ? 'active' : '' ?>">
-                        <a class="page-link" href="admin_layout.php?page=admin_meals&p=<?= $i ?>&sort=<?= $sort ?>&order=<?= $order ?>"><?= $i ?></a>
+                        <a class="page-link" href="admin_layout.php?page=admin_workout&p=<?= $i ?>&sort=<?= $sort ?>&order=<?= $order ?>"><?= $i ?></a>
                     </li>
                 <?php endfor; ?>
                 
@@ -420,7 +503,7 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
                         </li>
                     <?php endif; ?>
                     <li class="page-item">
-                        <a class="page-link" href="admin_layout.php?page=admin_meals&p=<?= $total_pages ?>&sort=<?= $sort ?>&order=<?= $order ?>"><?= $total_pages ?></a>
+                        <a class="page-link" href="admin_layout.php?page=admin_workout&p=<?= $total_pages ?>&sort=<?= $sort ?>&order=<?= $order ?>"><?= $total_pages ?></a>
                     </li>
                 <?php endif; ?>
                 
@@ -430,7 +513,7 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
                 $next_disabled = ($page >= $total_pages) ? 'disabled' : '';
                 ?>
                 <li class="page-item <?= $next_disabled ?>">
-                    <a class="page-link" href="admin_layout.php?page=admin_meals&p=<?= $next_page ?>&sort=<?= $sort ?>&order=<?= $order ?>">
+                    <a class="page-link" href="admin_layout.php?page=admin_workout&p=<?= $next_page ?>&sort=<?= $sort ?>&order=<?= $order ?>">
                         Next <i class="fas fa-chevron-right"></i>
                     </a>
                 </li>
@@ -439,11 +522,39 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
         </div>
     </div>
     
-    <div class="card" style="margin-top: 20px;">
-        <div class="card-body" style="text-align: center;">
-            <a href="admin_layout.php?page=admin_add_update_meal" class="btn btn-primary">
-                <i class="fas fa-plus-circle"></i> Add New Meal
-            </a>
+    <div class="card">
+        <div class="card-header">
+            <h3 class="workout-card-title">Add New Workout</h3>
+        </div>
+        <div class="card-body">
+            <div class="add-workout-btn-container">
+                <button id="toggleAddWorkoutForm" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> Add New Workout
+                </button>
+            </div>
+            
+            <div id="addWorkoutForm" class="add-workout-form">
+                <form method="POST">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="workout_name" class="form-label">Workout Name *</label>
+                            <input type="text" id="workout_name" name="name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="duration" class="form-label">MET *</label>
+                            <input type="number" id="duration" name="MET" class="form-control" required step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" name="add_workout" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Workout
+                        </button>
+                        <button type="button" id="cancelAddWorkout" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -452,7 +563,7 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
     // Search functionality
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const input = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#mealsTable tbody tr');
+        const rows = document.querySelectorAll('#workoutsTable tbody tr');
         
         rows.forEach(row => {
             const text = row.textContent.toLowerCase();
@@ -477,4 +588,19 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
         url.searchParams.set('p', 1);
         window.location.href = url.toString();
     }
+    
+    // Toggle add workout form
+    const toggleBtn = document.getElementById('toggleAddWorkoutForm');
+    const addWorkoutForm = document.getElementById('addWorkoutForm');
+    const cancelBtn = document.getElementById('cancelAddWorkout');
+    
+    toggleBtn.addEventListener('click', function() {
+        addWorkoutForm.classList.add('show');
+        toggleBtn.style.display = 'none';
+    });
+    
+    cancelBtn.addEventListener('click', function() {
+        addWorkoutForm.classList.remove('show');
+        toggleBtn.style.display = 'inline-flex';
+    });
 </script>

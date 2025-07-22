@@ -14,7 +14,7 @@ $reps=$_POST['reps'];
 $weight = $_POST['weight']; // weight lifted, not body weight
 $time_per_rep=$_POST['time_per_rep'];
 // 1. Get user's body weight from fitness_profiles
-$weight_query = "SELECT weight FROM fitness_profiles WHERE user_id = ?";
+$weight_query = "SELECT weight_kg FROM user_fitness_profiles WHERE user_id = ?";
 $stmt = mysqli_prepare($conn, $weight_query);
 mysqli_stmt_bind_param($stmt, "i", $user_id);
 mysqli_stmt_execute($stmt);

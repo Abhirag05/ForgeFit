@@ -9,7 +9,7 @@ if (!isset($_GET['id'])) {
 
 $user_id = $_GET['id'];
 
-$sql = "SELECT u.id, u.fullname, u.email, u.role, f.profile_image, f.age, f.gender, f.height_cm, f.weight_kg, f.primary_goal, f.activity_level 
+$sql = "SELECT u.id, u.fullname, u.email, u.role, u.joined_date, f.profile_image, f.age, f.gender, f.height_cm, f.weight_kg, f.primary_goal, f.activity_level 
         FROM users u
         LEFT JOIN user_fitness_profiles f ON u.id = f.user_id
         WHERE u.id = $user_id";
@@ -176,6 +176,7 @@ $meals = mysqli_fetch_assoc($mealResult)['total'] ?? 0;
         <tr><td class="label">Full Name</td><td><?php echo $user['fullname']; ?></td></tr>
         <tr><td class="label">Email</td><td><?php echo $user['email']; ?></td></tr>
         <tr><td class="label">Role</td><td><?php echo $user['role']; ?></td></tr>
+        <tr><td class="label">Joined Date</td><td><?php echo $user['joined_date']; ?></td></tr>
         <tr><td class="label">Age</td><td><?php echo $user['age'] ?? 'N/A'; ?></td></tr>
         <tr><td class="label">Gender</td><td><?php echo $user['gender'] ?? 'N/A'; ?></td></tr>
         <tr><td class="label">Height (cm)</td><td><?php echo $user['height_cm'] ?? 'N/A'; ?></td></tr>
