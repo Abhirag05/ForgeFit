@@ -26,10 +26,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $protein = floatval($_POST['protein']);
         $carbs = floatval($_POST['carbs']);
         $fat = floatval($_POST['fat']);
+        $fibre = floatval($_POST['fibre']);
 
         if ($food_name && $unit && is_numeric($calories)) {
-            $stmt = $conn->prepare("UPDATE meals SET food_name = ?, unit = ?, calories = ?, protein = ?, carbs = ?, fat = ? WHERE meal_id = ?");
-            $stmt->bind_param("ssddddi", $food_name, $unit, $calories, $protein, $carbs, $fat, $meal_id);
+            $stmt = $conn->prepare("UPDATE meals SET food_name = ?, unit = ?, calories = ?, protein = ?, carbs = ?, fat = ?,fibre = ? WHERE meal_id = ?");
+            $stmt->bind_param("ssdddddi", $food_name, $unit, $calories, $protein, $carbs, $fat, $fibre,$meal_id);
             $stmt->execute();
             $_SESSION['message'] = "Meal updated successfully!";
             $_SESSION['msg_type'] = "success";
@@ -47,10 +48,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $protein = floatval($_POST['protein']);
         $carbs = floatval($_POST['carbs']);
         $fat = floatval($_POST['fat']);
+        $fibre = floatval($_POST['fibre']);
 
         if ($food_name && $unit && is_numeric($calories)) {
-            $stmt = $conn->prepare("INSERT INTO meals (food_name, unit, calories, protein, carbs, fat) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssdddd", $food_name, $unit, $calories, $protein, $carbs, $fat);
+            $stmt = $conn->prepare("INSERT INTO meals (food_name, unit, calories, protein, carbs, fat,fibre) VALUES (?, ?, ?, ?, ?, ?,?)");
+            $stmt->bind_param("ssddddd", $food_name, $unit, $calories, $protein, $carbs, $fat,$fibre);
             $stmt->execute();
             $_SESSION['message'] = "Meal added successfully!";
             $_SESSION['msg_type'] = "success";
@@ -281,6 +283,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <label for="fat" class="form-label">Fat (g)</label>
                         <input type="number" id="fat" name="fat" step="0.01" class="form-control" 
                                value="<?= $is_edit ? $edit_meal['fat'] : '' ?>">
+                    </div>
+                    <div class="form-group">
+                        <label for="fibre" class="form-label">Fibre (g)</label>
+                        <input type="number" id="fibre" name="fibre" step="0.01" class="form-control" 
+                               value="<?= $is_edit ? $edit_meal['fibre'] : '' ?>">
                     </div>
                 </div>
                 <div class="form-group">

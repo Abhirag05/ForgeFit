@@ -20,7 +20,7 @@ $offset = ($page - 1) * $results_per_page;
 // Sorting
 $sort = isset($_GET['sort']) ? $_GET['sort'] : 'meal_id';
 $order = isset($_GET['order']) ? $_GET['order'] : 'DESC';
-$valid_sort_columns = ['meal_id', 'food_name', 'calories', 'protein', 'carbs', 'fat'];
+$valid_sort_columns = ['meal_id', 'food_name', 'calories', 'protein', 'carbs', 'fat','fibre'];
 $sort = in_array($sort, $valid_sort_columns) ? $sort : 'meal_id';
 $order = $order === 'ASC' ? 'ASC' : 'DESC';
 
@@ -339,6 +339,8 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
                                 onclick="sortTable('carbs', '<?= $sort === 'carbs' && $order === 'DESC' ? 'ASC' : 'DESC' ?>')">Carbs</th>
                             <th class="<?= $sort === 'fat' ? ($order === 'ASC' ? 'sort-asc' : 'sort-desc') : '' ?>"
                                 onclick="sortTable('fat', '<?= $sort === 'fat' && $order === 'DESC' ? 'ASC' : 'DESC' ?>')">Fat</th>
+                                <th class="<?= $sort === 'fibre' ? ($order === 'ASC' ? 'sort-asc' : 'sort-desc') : '' ?>"
+                                onclick="sortTable('fibre', '<?= $sort === 'fibre' && $order === 'DESC' ? 'ASC' : 'DESC' ?>')">Fibre</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -353,6 +355,7 @@ $result = $conn->query("SELECT * FROM meals ORDER BY $sort $order LIMIT $offset,
                                 <td><?= number_format($row['protein'], 2) ?></td>
                                 <td><?= number_format($row['carbs'], 2) ?></td>
                                 <td><?= number_format($row['fat'], 2) ?></td>
+                                <td><?= number_format($row['fibre'], 2) ?></td>
                                 <td class="action-btns">
                                     <a href="admin_layout.php?page=admin_add_update_meal&edit_id=<?= $row['meal_id'] ?>" class="btn btn-warning btn-sm">
                                         <i class="fas fa-edit"></i> Edit

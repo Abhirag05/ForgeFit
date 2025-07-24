@@ -18,7 +18,7 @@ if (!$meal_id || !$quantity || !$date) {
 }
 
 // Fetch meal data
-$sql = "SELECT calories, protein, carbs, fat, unit FROM meals WHERE meal_id = ?";
+$sql = "SELECT calories, protein, carbs, fat,fibre, unit FROM meals WHERE meal_id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $meal_id);
 $stmt->execute();
@@ -43,14 +43,15 @@ $total_calories = $meal['calories'] * $multiplier;
 $total_protein  = $meal['protein']  * $multiplier;
 $total_carbs    = $meal['carbs']    * $multiplier;
 $total_fat      = $meal['fat']      * $multiplier;
+$total_fibre      = $meal['fibre']      * $multiplier;
 
 // Insert into log
 $insert = "INSERT INTO logged_meals 
-(user_id, meal_id, quantity, total_calories, total_protein, total_carbs, total_fat,date)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+(user_id, meal_id, quantity, total_calories, total_protein, total_carbs, total_fat,total_fibre,date)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)";
 
 $stmt = $conn->prepare($insert);
-$stmt->bind_param("iiddddds", $user_id, $meal_id, $quantity, $total_calories, $total_protein, $total_carbs, $total_fat, $date);
+$stmt->bind_param("iidddddds", $user_id, $meal_id, $quantity, $total_calories, $total_protein, $total_carbs, $total_fat,$total_fibre, $date);
 
 if ($stmt->execute()) {
     header("Location: user_meal.php?success=1");

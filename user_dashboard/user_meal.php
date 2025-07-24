@@ -19,7 +19,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 }
 // Fetch logged meal history
 $user_id = $_SESSION['user_id'];
-$historyQuery = "SELECT lm.date, m.food_name, m.unit, lm.quantity, lm.total_calories, lm.total_protein, lm.total_carbs, lm.total_fat 
+$historyQuery = "SELECT lm.date, m.food_name, m.unit, lm.quantity, lm.total_calories, lm.total_protein, lm.total_carbs, lm.total_fat,lm.total_fibre 
                  FROM logged_meals lm 
                  JOIN meals m ON lm.meal_id = m.meal_id 
                  WHERE lm.user_id = $user_id 
@@ -358,6 +358,7 @@ $historyResult = mysqli_query($conn, $historyQuery);
                   <th>Protein</th>
                   <th>Carbs</th>
                   <th>Fat</th>
+                  <th>Fibre</th>
                 </tr>
               </thead>
               <tbody>
@@ -371,6 +372,7 @@ $historyResult = mysqli_query($conn, $historyQuery);
                     <td><?= round($row['total_protein'], 1) ?>g</td>
                     <td><?= round($row['total_carbs'], 1) ?>g</td>
                     <td><?= round($row['total_fat'], 1) ?>g</td>
+                    <td><?= round($row['total_fibre'], 1) ?>g</td>
                   </tr>
                 <?php endwhile; ?>
               <?php else: ?>
