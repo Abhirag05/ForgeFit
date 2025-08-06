@@ -1,6 +1,8 @@
 <?php
 session_start();
 include '../db.php';
+include_once 'xp-system.php';
+
 
 if (!isset($_SESSION['user_id'])) {
     $_SESSION['alert_message'] = "Unauthorized access.";
@@ -133,9 +135,27 @@ if (isset($_POST['edit_id']) && !empty($_POST['edit_id'])) {
     $stmt->bind_param("iisids", $user_id, $workout_id, $date, $sets, $calories_burned, $set_details_json);
 
     if ($stmt->execute()) {
-        $_SESSION['alert_message'] = "Workout logged successfully!";
-        $_SESSION['alert_type'] = "success";
-        $_SESSION['alert_title'] = "Success!";
+        // EXP logic: Only award for first 10 logs per day
+        $today = date('Y-m-d');
+        $exp_limit = 10;
+        $exp_per_log = 10;
+        // Count today's workouts
+        $count_stmt = $conn->prepare("SELECT COUNT(*) FROM all_logged_workouts WHERE user_id = ? AND DATE(date) = ?");
+        $count_stmt->bind_param("is", $user_id, $today);
+        $count_stmt->execute();
+        $count_stmt->bind_result($workout_count_today);
+        $count_stmt->fetch();
+        $count_stmt->close();
+        if ($workout_count_today <= $exp_limit) {
+            addExperience($user_id, $exp_per_log, $conn);
+            $_SESSION['alert_message'] = "Workout logged successfully! (+10 EXP)";
+            $_SESSION['alert_type'] = "success";
+            $_SESSION['alert_title'] = "Success!";
+        } else {
+            $_SESSION['alert_message'] = "Workout logged! You're overworking! No more EXP for today.";
+            $_SESSION['alert_type'] = "warning";
+            $_SESSION['alert_title'] = "Overwork!";
+        }
         header("Location: user_workout_history.php");
         exit();
     } else {

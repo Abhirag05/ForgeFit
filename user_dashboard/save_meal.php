@@ -1,6 +1,7 @@
 <?php
 session_start();
 include '../db.php';
+include_once 'xp-system.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
@@ -153,9 +154,34 @@ if ($is_edit) {
     );
     
     if ($insert_stmt->execute()) {
-        $_SESSION['alert_message'] = "Meal logged successfully!";
-        $_SESSION['alert_type'] = "success";
-        $_SESSION['alert_title'] = "Success!";
+        // EXP logic: Only award if total calories for today (including this meal) <= maintenance calories
+        $today = date('Y-m-d', strtotime($datetime_mysql));
+        // Get user's maintenance calories
+        $maint_sql = "SELECT maintenance_calories FROM user_fitness_profiles WHERE user_id = ? LIMIT 1";
+        $maint_stmt = $conn->prepare($maint_sql);
+        $maint_stmt->bind_param("i", $user_id);
+        $maint_stmt->execute();
+        $maint_stmt->bind_result($maintenance_calories);
+        $maint_stmt->fetch();
+        $maint_stmt->close();
+        // Sum calories for today (including this meal)
+        $cal_sql = "SELECT SUM(total_calories) FROM logged_meals WHERE user_id = ? AND DATE(date) = ?";
+        $cal_stmt = $conn->prepare($cal_sql);
+        $cal_stmt->bind_param("is", $user_id, $today);
+        $cal_stmt->execute();
+        $cal_stmt->bind_result($total_cals_today);
+        $cal_stmt->fetch();
+        $cal_stmt->close();
+        if ($maintenance_calories && $total_cals_today <= $maintenance_calories) {
+            addExperience($user_id, 5, $conn);
+            $_SESSION['alert_message'] = "Meal logged successfully! (+5 EXP)";
+            $_SESSION['alert_type'] = "success";
+            $_SESSION['alert_title'] = "Success!";
+        } else {
+            $_SESSION['alert_message'] = "Meal logged! You are overeating! No more EXP for today.";
+            $_SESSION['alert_type'] = "warning";
+            $_SESSION['alert_title'] = "Overeating!";
+        }
         header("Location: user_meal.php");
         exit();
     } else {

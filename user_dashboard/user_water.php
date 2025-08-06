@@ -1,6 +1,7 @@
 <?php
 session_start();
 include '../db.php'; // Assuming this is your database connection file
+include_once 'xp-system.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -41,6 +42,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare("INSERT INTO user_water_intake (user_id, glasses_count, date_recorded) VALUES (?, 1, ?)");
             $stmt->bind_param("is", $user_id, $today);
             $stmt->execute();
+            // EXP logic for water intake
+            // Count glasses after logging
+            $stmt2 = $conn->prepare("SELECT SUM(glasses_count) as total FROM user_water_intake WHERE user_id = ? AND date_recorded = ?");
+            $stmt2->bind_param("is", $user_id, $today);
+            $stmt2->execute();
+            $result2 = $stmt2->get_result()->fetch_assoc();
+            $total_glasses_today = $result2['total'] ?? 0;
+            $stmt2->close();
+            if ($total_glasses_today <= 12) {
+                addExperience($user_id, 2, $conn);
+                $_SESSION['alert_message'] = "Glass of water logged! (+2 EXP)";
+                $_SESSION['alert_type'] = "success";
+                $_SESSION['alert_title'] = "Hydrated!";
+            } else {
+                $_SESSION['alert_message'] = "Glass of water logged! You are overdrinking! No more EXP for today.";
+                $_SESSION['alert_type'] = "warning";
+                $_SESSION['alert_title'] = "Overdrinking!";
+            }
+            header("Location: user_water.php");
+            exit();
             $stmt->close();
             $current_glasses++;
         } elseif ($action === 'remove' && $current_glasses > 0) {
@@ -288,11 +309,166 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 font-size: 2rem;
             }
         }
+        /* Modern Alert System */
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .modern-alert {
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: translateX(120%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modern-alert.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .modern-alert.slide-out {
+            transform: translateX(120%);
+            opacity: 0;
+        }
+
+        .modern-alert::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            border-radius: 16px 16px 0 0;
+        }
+
+        .alert-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .alert-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            background: rgba(76, 175, 80, 0.15);
+            border-radius: 50%;
+            color: #4CAF50;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .alert-text {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .alert-message {
+            color: #b0b0b0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .alert-close {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .alert-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .alert-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: #4CAF50;
+            border-radius: 0 0 16px 16px;
+            animation: alertProgress 5s linear forwards;
+        }
+
+        @keyframes alertProgress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        /* Different alert types */
+        .modern-alert.success {
+            border-color: rgba(76, 175, 80, 0.3);
+        }
+
+        .modern-alert.success::before {
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+        }
+
+        .modern-alert.success .alert-icon {
+            background: rgba(76, 175, 80, 0.15);
+            color: #4CAF50;
+        }
+
+        .modern-alert.success .alert-progress {
+            background: #4CAF50;
+        }
+
+        .modern-alert.error {
+            border-color: rgba(244, 67, 54, 0.3);
+        }
+
+        .modern-alert.error::before {
+            background: linear-gradient(90deg, #f44336, #d32f2f);
+        }
+
+        .modern-alert.error .alert-icon {
+            background: rgba(244, 67, 54, 0.15);
+            color: #f44336;
+        }
+
+        .modern-alert.error .alert-progress {
+            background: #f44336;
+        }
     </style>
 </head>
 <body>
     <div id="particles-js"></div>
     <?php include('components/user_navbar.php'); ?>
+    <!-- Modern Alert Container -->
+    <div class="alert-container" id="alertContainer"></div>
     
     <div class="container">
         <main>
@@ -384,6 +560,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         document.addEventListener('DOMContentLoaded', function() {
             updateDisplay();
         });
+    </script>
+    <script>
+    // Check for session alerts and display them
+    <?php if (isset($_SESSION['alert_message'])): ?>
+    document.addEventListener('DOMContentLoaded', function() {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertType = '<?= $_SESSION['alert_type'] ?>';
+        const alertTitle = '<?= addslashes($_SESSION['alert_title']) ?>';
+        const alertMessage = '<?= addslashes($_SESSION['alert_message']) ?>';
+        const icons = {
+            success: 'fas fa-check-circle',
+            error: 'fas fa-times-circle',
+            warning: 'fas fa-exclamation-triangle',
+            info: 'fas fa-info-circle'
+        };
+        const alertId = 'alert_' + Date.now();
+        const alertHTML = `
+            <div class="modern-alert ${alertType}" id="${alertId}">
+                <div class="alert-icon"><i class="${icons[alertType] || icons.info}"></i></div>
+                <div class="alert-text">
+                    <div class="alert-title">${alertTitle}</div>
+                    <div class="alert-message">${alertMessage}</div>
+                </div>
+                <button class="alert-close" onclick="document.getElementById('${alertId}').remove()"><i class="fas fa-times"></i></button>
+                <div class="alert-progress"></div>
+            </div>
+        `;
+        alertContainer.insertAdjacentHTML('beforeend', alertHTML);
+        setTimeout(() => {
+            document.getElementById(alertId).classList.add('show');
+        }, 100);
+        setTimeout(() => {
+            const alert = document.getElementById(alertId);
+            if (alert) {
+                alert.classList.add('slide-out');
+                setTimeout(() => alert.remove(), 400);
+            }
+        }, 5000);
+    });
+    <?php 
+        // Clear session alerts after displaying
+        unset($_SESSION['alert_message'], $_SESSION['alert_type'], $_SESSION['alert_title']); 
+    ?>
+    <?php endif; ?>
     </script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script>

@@ -1,6 +1,58 @@
 <?php
 session_start();
 include '../db.php';
+// Fetch user level and experience
+$user_level = 1;
+$user_exp = 0;
+$next_level_exp = 100;
+$level_progress_percent = 0;
+$level_badge = '';
+$user_id = $_SESSION['user_id'] ?? 0;
+if ($user_id) {
+    $stmt = $conn->prepare("SELECT level, experience FROM users WHERE id = ? LIMIT 1");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $stmt->bind_result($user_level, $user_exp);
+    $stmt->fetch();
+    $stmt->close();
+    // Get next level's required EXP
+    $stmt = $conn->prepare("SELECT required_exp FROM levels WHERE level = ? LIMIT 1");
+    $next_level = $user_level + 1;
+    $stmt->bind_param("i", $next_level);
+    $stmt->execute();
+    $stmt->bind_result($next_level_exp);
+    if (!$stmt->fetch()) {
+        // Max level, set next_level_exp to current
+        $next_level_exp = $user_exp;
+    }
+    $stmt->close();
+    // Get current level's required EXP
+    $stmt = $conn->prepare("SELECT required_exp FROM levels WHERE level = ? LIMIT 1");
+    $stmt->bind_param("i", $user_level);
+    $stmt->execute();
+    $stmt->bind_result($current_level_exp);
+    if (!$stmt->fetch()) {
+        $current_level_exp = 0;
+    }
+    $stmt->close();
+    // Calculate progress percent
+    $exp_for_this_level = $next_level_exp - $current_level_exp;
+    $exp_earned_this_level = $user_exp - $current_level_exp;
+    $level_progress_percent = $exp_for_this_level > 0 ? round(($exp_earned_this_level / $exp_for_this_level) * 100) : 100;
+    // Assign badge/rank based on level (example)
+    if ($user_level >= 10) {
+        $level_badge = 'S';
+    } elseif ($user_level >= 7) {
+        $level_badge = 'A';
+    } elseif ($user_level >= 4) {
+        $level_badge = 'B';
+    } elseif ($user_level >= 2) {
+        $level_badge = 'C';
+    } else {
+        $level_badge = 'D';
+    }
+}
+
 // Access control: Only logged-in users allowed
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'user') {
     header("Location: ../signin.php");
@@ -179,371 +231,9 @@ $calorie_percentage = min(100, ($consumed_nutrients['calories'] / max(1, $nutrie
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
      <link rel="icon" href="../assets/images/logo.png" type="image/x-icon">
+     <Link rel="stylesheet" href="user_home.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-       body {
-        font-family: 'Poppins', sans-serif;
-        background-color: #0a0a12;
-        color: white;
-        line-height: 1.6;
-        }
-
-        #particles-js {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: linear-gradient(135deg, #000000, #0b0016, #0f0c29);
-        }
-
-        .dashboard-container {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        .header {
-            margin-bottom: 2rem;
-        }
-
-        .header h1 {
-            color: white;
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
-            padding: 1.5rem;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .stat-card-title {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .stat-card-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-
-        .stat-card-icon.primary { background: rgba(106, 0, 255, 0.2); color: #a64aff; }
-        .stat-card-icon.success { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
-        .stat-card-icon.warning { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-        .stat-card-icon.water { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
-
-        .stat-card-value {
-            color: white;
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-card-description {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.85rem;
-        }
-
-        .stat-card-bg {
-            position: absolute;
-            bottom: -10px;
-            right: -10px;
-            font-size: 4rem;
-            color: rgba(255, 255, 255, 0.05);
-        }
-
-        /* Progress Section */
-        .progress-section {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .section-title {
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .progress-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-
-        .progress-item {
-            margin-bottom: 1.5rem;
-        }
-
-        .progress-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.9rem;
-        }
-
-        .progress-bar {
-            height: 8px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #a64aff, #6a00ff);
-            border-radius: 4px;
-            transition: width 0.3s ease;
-        }
-
-        /* Quick Actions */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .action-btn {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 1.5rem;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-            width: 250px;
-        }
-
-        .action-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-
-        .action-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(166, 74, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            color: #a64aff;
-        }
-
-        .action-label {
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-         /* Daily Nutrients Section */
-        .nutrients-section {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .nutrients-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        
-        .nutrients-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: rgba(255, 152, 0, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-        .circular-progress {
-            position: relative;
-            z-index: 1;
-        }
-        .circular-bg {
-            stroke: #fff2e0;
-            opacity: 0.3;
-        }
-        .circular-bar {
-            stroke: #ff9800;
-            stroke-linecap: round;
-            transition: stroke-dashoffset 0.5s ease;
-            transform: rotate(-90deg);
-            transform-origin: 50% 50%;
-        }
-        .nutrients-title {
-            flex: 1;
-        }
-
-        .nutrients-title h2 {
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin: 0;
-        }
-
-        .nutrients-title p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.9rem;
-            margin: 0;
-        }
-
-        .nutrients-actions {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .btn-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: rgba(255, 255, 255, 0.8);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-icon:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .btn-icon.add {
-            background: rgba(255, 152, 0, 0.2);
-            border-color: rgba(255, 152, 0, 0.3);
-            color: #ff9800;
-        }
-
-        .btn-icon.add:hover {
-            background: rgba(255, 152, 0, 0.3);
-        }
-
-        .nutrients-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .nutrient-item {
-            text-align: left;
-        }
-
-        .nutrient-label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.8rem;
-        }
-
-        .nutrient-name {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 1rem;
-            font-weight: 500;
-        }
-
-        .nutrient-values {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.85rem;
-        }
-
-        .nutrient-progress {
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
-
-        .nutrient-fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.3s ease;
-        }
-
-        .nutrient-fill.protein { background: linear-gradient(90deg, #e74c3c, #c0392b); }
-        .nutrient-fill.carbs { background: linear-gradient(90deg, #e74c3c, #c0392b); }
-        .nutrient-fill.Fat { background: linear-gradient(90deg, #e74c3c, #c0392b);}
-        .nutrient-fill.fiber { background: linear-gradient(90deg, #e74c3c, #c0392b);}
-
-        .nutrient-percentage {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-      
+       
     </style>
 </head>
 <body>
@@ -554,6 +244,25 @@ $calorie_percentage = min(100, ($consumed_nutrients['calories'] / max(1, $nutrie
         <main class="main-content">
             <div class="header">
                 <h1>Welcome, <?php echo htmlspecialchars($_SESSION['n'] ?? 'Champion'); ?>!</h1>
+            </div>
+            <!-- Level & EXP Section -->
+            <div class="level-exp-section">
+                <div class="level-badge-container">
+                    <div class="level-badge level-badge-<?php echo strtolower($level_badge); ?>">
+                        <span class="level-badge-rank"><?php echo $level_badge; ?></span>
+                        <span class="level-number">Lv <?php echo $user_level; ?></span>
+                    </div>
+                </div>
+                <div class="exp-progress-bar-container">
+                    <div class="exp-labels">
+                        <span>EXP</span>
+                        <span><?php echo $user_exp; ?> / <?php echo $next_level_exp; ?></span>
+                    </div>
+                    <div class="exp-progress-bar">
+                        <div class="exp-progress-fill" style="width: <?php echo $level_progress_percent; ?>%"></div>
+                    </div>
+                    <div class="exp-progress-percent"><?php echo $level_progress_percent; ?>%</div>
+                </div>
             </div>
             <!-- Daily Nutrients Section -->
             <div class="nutrients-section">
