@@ -20,6 +20,8 @@ if (!$profile_img) {
  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Document</title>
     <style>
      .navbar {
@@ -141,9 +143,9 @@ if (!$profile_img) {
                     <i class="fas fa-utensils"></i>
                     <span>Nutrition</span>
                 </a></li>
-                <li><a href="#" class="menu-item">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Progress</span>
+                <li><a href="chat_bot.php" class="menu-item">
+                <i class="fas fa-crown"></i>
+                    <span>Chat Bot</span>
                 </a></li>
                 <li><a href="#" class="menu-item">
                     <i class="fas fa-cog"></i>
