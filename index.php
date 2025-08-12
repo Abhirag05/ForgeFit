@@ -45,6 +45,7 @@
       position: fixed;
       width: 100%;
       z-index: 1000;
+      flex-wrap: wrap;
     }
 
     .logo {
@@ -60,6 +61,13 @@
     .nav-links {
       display: flex;
       gap: 2rem;
+      flex-wrap: wrap;
+      transition: gap 0.3s, font-size 0.3s;
+      list-style: none;
+      padding-left: 0;
+    }
+    .nav-links li {
+      list-style: none;
     }
 
     .nav-links a {
@@ -156,17 +164,17 @@
       animation: gradientFlow 5s linear infinite;
     }
 
-    @keyframes gradientFlow {
-      0% { background-position: 0% center; }
-      100% { background-position: 200% center; }
-    }
-
     .hero p {
       font-size: 1.2rem;
       max-width: 700px;
       margin-bottom: 2.5rem;
       opacity: 0.9;
       line-height: 1.6;
+    }
+
+    @keyframes gradientFlow {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
     }
 
     .cta-btn {
@@ -495,6 +503,112 @@
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       color: rgba(255, 255, 255, 0.5);
       font-size: 0.9rem;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 1200px) {
+      .hero h1 {
+        font-size: 3.5rem;
+      }
+      .hero p {
+        font-size: 1.1rem;
+      }
+    }
+
+    @media (max-width: 900px) {
+      nav {
+        padding: 1rem 2%;
+      }
+      .logo {
+        font-size: 1.2rem;
+      }
+      .nav-links {
+        gap: 1rem;
+      }
+      .nav-links a {
+        font-size: 0.95rem;
+        padding: 0.3rem 0.3rem;
+      }
+      .signin-btn {
+        padding: 0.4rem 1rem;
+        font-size: 0.95rem;
+      }
+      
+      .hero h1 {
+        font-size: 3rem;
+      }
+      .hero p {
+        font-size: 1rem;
+        max-width: 600px;
+      }
+      .cta-btn {
+        padding: 0.9rem 2rem;
+        font-size: 1rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+      .hero p {
+        font-size: 0.95rem;
+        max-width: 500px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      nav {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0.5rem 1%;
+      }
+      .logo {
+        font-size: 1rem;
+        color: #fff;
+        background: none;
+        -webkit-background-clip: initial;
+        background-clip: initial;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.18);
+      }
+      .nav-links {
+        gap: 0.5rem;
+        justify-content: center;
+      }
+      .nav-links a {
+        font-size: 0.85rem;
+        padding: 0.2rem 0.2rem;
+      }
+      .signin-btn {
+        padding: 0.3rem 0.7rem;
+        font-size: 0.85rem;
+        display: none;
+      }
+      
+      .hero h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+      }
+      .hero p {
+        font-size: 0.9rem;
+        max-width: 90%;
+        margin-bottom: 1.5rem;
+      }
+      .cta-btn {
+        padding: 0.8rem 1.8rem;
+        font-size: 0.95rem;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .hero h1 {
+        font-size: 1.8rem;
+      }
+      .hero p {
+        font-size: 0.85rem;
+      }
     }
   </style>
 </head>

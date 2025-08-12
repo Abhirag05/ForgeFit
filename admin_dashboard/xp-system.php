@@ -224,7 +224,7 @@ while ($row = $res->fetch_assoc()) {
 
 <div class="xp-management-container">
     <div class="xp-header">
-        <h1><i class="fas fa-trophy me-2"></i>XP Levels Management</h1>
+        <h2><i class="fas fa-trophy me-2"></i>XP Levels Management</h2>
         <p>Configure the experience points required for each level in your system</p>
     </div>
     

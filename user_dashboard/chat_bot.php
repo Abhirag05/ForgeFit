@@ -58,6 +58,9 @@ $history_stmt->close();
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script>
+        const USER_AVATAR = "<?= htmlspecialchars($user_avatar) ?>";
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fitness Assistant | Sensei</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -474,7 +477,9 @@ $history_stmt->close();
         const now = new Date();
         
         const messageTypeClass = isUser ? 'user-message' : 'bot-message';
-        const avatarIcon = isUser ? "<i class='fas fa-user'></i>" : "<i class='fas fa-robot'></i>";
+        const avatarIcon = isUser
+            ? `<img src="${USER_AVATAR}" alt="User Avatar" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">`
+            : "<i class='fas fa-robot'></i>";
         
         // Sanitize content to prevent HTML injection
         const sanitizedContent = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
