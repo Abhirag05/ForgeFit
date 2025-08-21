@@ -232,9 +232,6 @@ $calorie_percentage = min(100, ($consumed_nutrients['calories'] / max(1, $nutrie
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
      <link rel="icon" href="../assets/images/logo.png" type="image/x-icon">
      <Link rel="stylesheet" href="user_home.css">
-    <style>
-       
-    </style>
 </head>
 <body>
     <div id="particles-js"></div>
@@ -288,9 +285,6 @@ $calorie_percentage = min(100, ($consumed_nutrients['calories'] / max(1, $nutrie
                         <p><?php echo number_format($consumed_nutrients['calories']); ?>/<?php echo number_format($nutrient_goals['calories']); ?> cal (<?php echo round($calorie_percentage); ?>%)</p>
                     </div>
                     <div class="nutrients-actions">
-                        <div class="btn-icon">
-                            <i class="fas fa-camera"></i>
-                        </div>
                         <a href="user_meal.php" style="text-decoration: none;">
                             <div class="btn-icon add">
                                 <i class="fas fa-plus"></i>
@@ -392,44 +386,40 @@ $calorie_percentage = min(100, ($consumed_nutrients['calories'] / max(1, $nutrie
                     <a href="#" style="color: var(--primary); text-decoration: none;">View Details</a>
                 </div>
                 <div class="progress-container">
-                    <div>
-                        <div class="progress-item">
-                            <div class="progress-label">
-                                <span>Weekly Goal</span>
-                                <span>3/5 workouts</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 60%"></div>
-                            </div>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span>Weekly Goal</span>
+                            <span>3/5 workouts</span>
                         </div>
-                        <div class="progress-item">
-                            <div class="progress-label">
-                                <span>Protein Intake</span>
-                                <span>120/150g</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 80%"></div>
-                            </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 60%"></div>
                         </div>
                     </div>
-                    <div>
-                        <div class="progress-item">
-                            <div class="progress-label">
-                                <span>Sleep Quality</span>
-                                <span>6.5/8 hours</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 81%"></div>
-                            </div>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span>Protein Intake</span>
+                            <span>120/150g</span>
                         </div>
-                        <div class="progress-item">
-                            <div class="progress-label">
-                                <span>Steps</span>
-                                <span>8,500/10,000</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 85%"></div>
-                            </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span>Sleep Quality</span>
+                            <span>6.5/8 hours</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 81%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span>Steps</span>
+                            <span>8,500/10,000</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 85%"></div>
                         </div>
                     </div>
                 </div>
