@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 include '../db.php';
@@ -390,20 +391,48 @@ while ($row = mysqli_fetch_assoc($result)) {
             }
         }
 
-        @media (max-width: 480px) {
+        
+          @media (max-width: 480px) {
+            .dashboard-container {
+                max-width: 100vw;
+                padding: 8px 0;
+                margin: 0;
+            }
+            .container {
+                padding: 0 2px;
+            }
+            .log-header {
+                margin-bottom: 16px;
+            }
             .log-header h2 {
-                font-size: 1.5rem;
+                font-size: 1.1rem;
+                gap: 8px;
             }
-            
+            .log-form {
+                width: 100%;
+                max-width: 99vw;
+                padding: 12px 20px;
+            }
+            .form-group label {
+                font-size: 0.95rem;
+            }
+            .form-group input,
+            .form-group select {
+                font-size: 0.95rem;
+                padding: 8px 8px;
+            }
+            .input-grid {
+                gap: 10px;
+            }
             .btn {
-                padding: 10px 20px;
-                font-size: 0.9rem;
-            }
-
-            .alert-container {
-                top: 10px;
+                padding: 10px 10px;
+                font-size: 0.95rem;
             }
         }
+
+       
+
+        
     </style>
 </head>
 <body>

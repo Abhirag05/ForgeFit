@@ -189,8 +189,9 @@ $mealOrder = ['breakfast', 'lunch', 'snack', 'dinner'];
         .btn-primary:hover {
             background: linear-gradient(90deg, #9438ff, #5a00e6);
         }
-        
-        .summary-section {
+
+    /* Summary section */    
+     .summary-section {
            background: rgba(166, 74, 255, 0.1);
     border-radius: 12px;
     padding: 20px;
@@ -243,6 +244,50 @@ $mealOrder = ['breakfast', 'lunch', 'snack', 'dinner'];
             text-transform: uppercase;
             letter-spacing: 1px;
         }
+    /* Summary section responsiveness code */
+     @media (max-width: 480px) {
+        .summary-section {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+        }
+        .summary-title {
+            font-size: 1.05rem;
+            gap: 0.3rem;
+        }
+        .summary-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.7rem;
+        }
+        .summary-card {
+            padding: 0.7rem;
+            border-radius: 7px;
+        }
+        .summary-value {
+            font-size: 1.1rem;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .summary-section {
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .summary-title {
+            font-size: 0.95rem;
+        }
+        .summary-grid {
+            grid-template-columns: 1fr;
+            gap: 0.4rem;
+        }
+        .summary-card {
+            padding: 0.4rem;
+            border-radius: 4px;
+        }
+        .summary-value {
+            font-size: 0.95rem;
+        }
+    }
         
         .meals-section {
             margin-top: 2rem;
@@ -431,6 +476,54 @@ $mealOrder = ['breakfast', 'lunch', 'snack', 'dinner'];
             margin-bottom: 1rem;
             opacity: 0.3;
         }
+/* Meal Section responsiveness later need to change more accurately*/
+     @media (max-width: 480px) {
+        .meals-section {
+            margin-top: 1rem;
+        }
+        .meals-grid {
+            gap: 0.7rem;
+        }
+        .meal-type-section {
+            padding: 0.8rem;
+            border-radius: 8px;
+        }
+        .meal-type-header {
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.7rem;
+        }
+        .meal-type-badge {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.7rem;
+            border-radius: 8px;
+            margin-right: 0.5rem;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .meals-section {
+            margin-top: 0.5rem;
+        }
+        .meals-grid {
+            gap: 0.3rem;
+        }
+        .meal-type-section {
+            padding: 0.4rem;
+            border-radius: 5px;
+        }
+        .meal-type-header {
+            padding-bottom: 0.2rem;
+            margin-bottom: 0.3rem;
+        }
+        .meal-type-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 5px;
+            margin-right: 0.2rem;
+        }
+    }
+       
+
         
         /* Modal styles for delete confirmation */
         .modal {

@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 include '../db.php';
@@ -573,6 +574,46 @@ $formattedDate = date('M j, Y', strtotime($selected_date));
 
             .alert-container {
                 top: 10px;
+            }
+            .day-summary {
+                padding: 10px;
+                border-radius: 8px;
+                margin-bottom: 18px;
+            }
+            .summary-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .summary-item {
+                padding: 8px;
+                border-radius: 6px;
+            }
+            .summary-value {
+                font-size: 1.1rem;
+            }
+            .summary-label {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .day-summary {
+                padding: 5px;
+                border-radius: 5px;
+            }
+            .summary-grid {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+            .summary-item {
+                padding: 5px;
+                border-radius: 4px;
+            }
+            .summary-value {
+                font-size: 0.95rem;
+            }
+            .summary-label {
+                font-size: 0.7rem;
             }
         }
     </style>

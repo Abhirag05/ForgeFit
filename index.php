@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ForgeFit</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-   <link rel="icon" href="assets/images/logo.png" type="image/x-icon">
+  <link rel="icon" href="assets/images/logo.png" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #ff4d4d;
@@ -49,13 +50,19 @@
     }
 
     .logo {
-      font-size: 1.8rem;
-      font-weight: 700;
-      background:white;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      letter-spacing: 1px;
+      font-family: 'Orbitron', 'Poppins', Arial, sans-serif;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      background: none;
+      -webkit-background-clip: initial;
+      background-clip: initial;
+      text-shadow: 0 2px 12px rgba(106,0,255,0.12);
+      line-height: 1;
+      padding: 0.1em 0;
+      transition: font-size 0.3s;
     }
 
     .nav-links {
@@ -165,7 +172,7 @@
     }
 
     .hero p {
-      font-size: 1.2rem;
+  font-size: 1.5rem;
       max-width: 700px;
       margin-bottom: 2.5rem;
       opacity: 0.9;
@@ -402,7 +409,7 @@
       border: 1px solid rgba(255, 77, 77, 0.3);
       border-radius: 10px;
       color: white;
-      font-size: 1rem;
+  font-size: 1.1rem;
       transition: all 0.3s;
     }
 
@@ -618,7 +625,9 @@
 
   <!-- Simplified Navbar -->
   <nav>
-    <div class="logo">ForgeFit</div>
+    <div class="logo" style="padding:0; margin:0; display:flex; align-items:center;">
+      <img src="assets/images/logo1.png" alt="ForgeFit Logo" style="height:44px; width:auto; display:block; max-width:180px; object-fit:contain;" />
+    </div>
     <ul class="nav-links">
       <li><a href="#">Home</a></li>
       <li><a href="#features">Features</a></li>
