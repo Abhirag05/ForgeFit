@@ -2,7 +2,11 @@
 session_start();
 require '../../vendor/autoload.php'; // adjust if you’re not using composer
 
-\Stripe\Stripe::setApiKey('sk_test_51Rzs7eAGXSIrL9LVRHOyczb8HJrmvfuXOJXBcFJmaJrCYSB3CnmKJNPxabvWKu6tFtdGZH3OUfqi3D38HapmGjms00pBtZQ5Sq'); // replace with your Stripe Secret Key
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
+$dotenv->load();
+
+$stripeSecretKey = $_ENV['STRIPE_SECRET_KEY'];
+\Stripe\Stripe::setApiKey($stripeSecretKey);
 
 header('Content-Type: application/json');
 

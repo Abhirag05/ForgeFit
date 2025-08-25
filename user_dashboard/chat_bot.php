@@ -13,8 +13,8 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 
 //payment model integration
-$premium = $_SESSION['premium'] ?? 0;
-if (!$premium || $premium == 0) {
+$premium =  $_SESSION['premium'];
+if ($premium == 0) {
     include('components/payment_model.php');
     echo "<script>
         document.addEventListener('DOMContentLoaded', function() {

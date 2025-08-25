@@ -1,3 +1,10 @@
+<?php
+// At the top of your file, before the HTML
+require_once __DIR__ . '/../../vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
+$dotenv->load();
+$stripe_publishable_key = $_ENV['STRIPE_PUBLISHABLE_KEY'];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -215,7 +222,7 @@
 
 
 <script>
-const stripe = Stripe("pk_test_51Rzs7eAGXSIrL9LVvSSco4S0Z9WPkaB8NNfncAvOZztnZLdyB7UPubMErLMPTEtJMNzWcDAGW6wUGaZNHhLGm91m00yz4c1eu3"); // Replace with your Publishable Key
+const stripe = Stripe("<?= $stripe_publishable_key ?>"); // Replace with your Publishable Key
 
 document.getElementById("payNowBtn").addEventListener("click", function () {
     fetch("components/create_checkout_session.php", {

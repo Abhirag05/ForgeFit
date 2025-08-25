@@ -27,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['role']    = $user['role'];
         $_SESSION['n']       = $user['fullname'];
+        $_SESSION['premium']   = $user['premium'];
 
         if ($user['role'] == 'admin') {
             header("Location: admin_dashboard/admin_layout.php");
