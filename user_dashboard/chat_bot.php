@@ -2,6 +2,7 @@
 session_start();
 include '../db.php';
 
+
 // Check login
 if (!isset($_SESSION['user_id'])) {
     header("Location: signin.php");
@@ -10,6 +11,18 @@ if (!isset($_SESSION['user_id'])) {
 
 // Get user_id from session FIRST
 $user_id = $_SESSION['user_id'];
+
+//payment model integration
+$premium = $_SESSION['premium'] ?? 0;
+if (!$premium || $premium == 0) {
+    include('components/payment_model.php');
+    echo "<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showPaymentModal();
+        });
+    </script>";
+    exit();
+}
 
 // Fetch user details and profile image
 $stmt = $conn->prepare("SELECT u.fullname, u.level, p.primary_goal, p.profile_image FROM users u LEFT JOIN user_fitness_profiles p ON u.id = p.user_id WHERE u.id = ?");
@@ -608,7 +621,6 @@ $history_stmt->close();
 </head>
 <body>
     <div id="particles-js"></div>
-    
     <!-- The navbar include can be placed here if needed, but for a dedicated chat UI, it might be better on other pages. -->
     <?php include('components/user_navbar.php'); ?>
     
