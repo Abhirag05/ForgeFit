@@ -319,8 +319,7 @@ if (!$profile_img) {
 <body>
   <nav class="navbar">
     <a href="user_home.php" class="navbar-brand">
-      <i class="fas fa-dumbbell logo-icon"></i>
-      <h2>ForgeFit</h2>
+    <img src="/ForgeFit_mini_project/assets/images/logo1.png" alt="ForgeFit Logo" style="height:44px; width:auto; display:block; max-width:180px; object-fit:contain;" />
     </a>
 
     <!-- Desktop Menu -->

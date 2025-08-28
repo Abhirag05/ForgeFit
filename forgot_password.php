@@ -8,7 +8,7 @@ session_start();
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
    <link rel="icon" href="assets/images/logo.png" type="image/x-icon">
-  <title>Sign In</title>
+  <title>Forgot Password</title>
   <style>
     * {
       box-sizing: border-box;
@@ -35,7 +35,7 @@ session_start();
       overflow: hidden;
     }
 
-    .signin-container {
+    .forgot-container {
       background: rgba(0, 0, 0, 0.6);
       backdrop-filter: blur(1px);
       border: 1px solid rgba(108, 117, 125, 0.2);
@@ -47,7 +47,7 @@ session_start();
       animation: fadeIn 1s ease;
     }
 
-    .signin-container h2 {
+    .forgot-container h2 {
       text-align: center;
       margin-bottom: 24px;
       color: #ffffff;
@@ -118,7 +118,7 @@ session_start();
       display: inline;
     }
 
-    .signin-btn {
+    .reset-btn {
       width: 100%;
       background: linear-gradient(135deg, #6a00ff, #4ca1af);
       color: white;
@@ -130,7 +130,7 @@ session_start();
       transition: background 0.3s ease, transform 0.2s ease;
     }
 
-    .signin-btn:hover {
+    .reset-btn:hover {
       background: linear-gradient(135deg, #4ca1af, #6a00ff);
       transform: translateY(-2px);
     }
@@ -181,24 +181,32 @@ session_start();
       color: white;
       box-shadow: 0 0 10px #6a00ff;
     }
+
+    .info-text {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #bbb;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
   <div id="particles-js"></div>
   <div class="top-nav">
-    <a href="index.php" class="back-home-btn">←</a>
+    <a href="signin.php" class="back-home-btn">← Back to Sign In</a>
   </div>
 
-  <div class="signin-container">
-    <h2>Sign In</h2>
-    <form id="signinForm">
+  <div class="forgot-container">
+    <h2>Reset Password</h2>
+    
+    <form id="forgotForm">
       <div class="input-group">
         <label for="email">Email Address</label>
         <input type="email" id="email" name="email" required />
       </div>
 
       <div class="input-group">
-        <label for="password">Password</label>
+        <label for="password">New Password</label>
         <input type="password" id="password" name="password" required />
         <button type="button" class="toggle-password" aria-label="Show password">
           <svg class="eye-icon-visible" viewBox="0 0 24 24">
@@ -210,14 +218,18 @@ session_start();
         </button>
       </div>
 
+      <div class="input-group">
+        <label for="confirmPassword">Confirm New Password</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" required />
+      </div>
+
       <div id="messageBox" style="margin: 10px 0; padding: 10px; border-radius: 5px; display: none; text-align: center; font-size: 14px;"></div>
 
-      <button class="signin-btn" type="submit" id="submitBtn">Sign In</button>
+      <button class="reset-btn" type="submit" id="submitBtn">Reset Password</button>
     </form>
 
     <div class="bottom-text">
-      Don't have an account? <a href="signup.php">Sign Up</a><br>
-      <a href="forgot_password.php">Forgot Password?</a>
+      Remember your password? <a href="signin.php">Sign In</a>
     </div>
   </div>
 
@@ -245,9 +257,10 @@ session_start();
       });
 
       // Form elements
-      const form = document.getElementById('signinForm');
+      const form = document.getElementById('forgotForm');
       const emailInput = document.getElementById('email');
       const passwordInput = document.getElementById('password');
+      const confirmPasswordInput = document.getElementById('confirmPassword');
       const messageBox = document.getElementById('messageBox');
       const submitBtn = document.getElementById('submitBtn');
 
@@ -262,7 +275,6 @@ session_start();
           toggleButton.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
         });
 
-        // Enable Enter key to toggle password
         toggleButton.addEventListener('keypress', (e) => {
           if (e.key === 'Enter') {
             toggleButton.click();
@@ -279,20 +291,16 @@ session_start();
         messageBox.style.border = `1px solid ${type === 'success' ? '#66ff99' : '#ff6666'}`;
       }
 
-      // Hide message function
-      function hideMessage() {
-        messageBox.style.display = 'none';
-      }
-
       // Form submission
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const email = emailInput.value.trim();
         const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
 
         // Basic validation
-        if (!email || !password) {
+        if (!email || !password || !confirmPassword) {
           showMessage('All fields are required.', 'error');
           return;
         }
@@ -302,18 +310,29 @@ session_start();
           return;
         }
 
+        if (password.length < 6) {
+          showMessage('Password must be at least 6 characters long.', 'error');
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          showMessage('Passwords do not match.', 'error');
+          return;
+        }
+
         // Show loading state
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Signing in...';
-        showMessage('Signing in, please wait...', 'success');
+        submitBtn.textContent = 'Resetting...';
+        showMessage('Resetting password, please wait...', 'success');
 
         try {
-          const response = await fetch('signinhandler.php', {
+          const response = await fetch('forgot_password_handler.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
               email: email,
-              password: password
+              password: password,
+              confirmPassword: confirmPassword
             })
           });
 
@@ -322,17 +341,17 @@ session_start();
           if (data.status === 'success') {
             showMessage(data.message, 'success');
             setTimeout(() => {
-              window.location.href = data.redirect;
-            }, 1500);
+              window.location.href = 'signin.php';
+            }, 2000);
           } else {
             showMessage(data.message, 'error');
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Sign In';
+            submitBtn.textContent = 'Reset Password';
           }
         } catch (err) {
           showMessage('Something went wrong. Please try again.', 'error');
           submitBtn.disabled = false;
-          submitBtn.textContent = 'Sign In';
+          submitBtn.textContent = 'Reset Password';
         }
       });
     });

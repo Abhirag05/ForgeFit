@@ -90,9 +90,9 @@
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="d-flex align-items-center">
-            <span class="logo">ForgeFit</span>
-        </div>
+        <div class="logo" style="padding:0; margin:0; display:flex; align-items:center;">
+        <img src="/ForgeFit_mini_project/assets/images/logo1.png" alt="ForgeFit Logo" style="height:44px; width:auto; display:block; max-width:180px; object-fit:contain;" />
+    </div>
 
         <div class="d-flex align-items-center">
             <div class="dropdown">
