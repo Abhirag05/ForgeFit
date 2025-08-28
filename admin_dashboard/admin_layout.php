@@ -112,7 +112,7 @@ try {
     <div class="main-content">
         <?php
          $page = $_GET['page'] ?? 'admin_home';
-        $allowed = ['admin_home', 'user_details', 'admin_meals', 'admin_workout', 'xp-system', 'settings','admin_add_update_meal','admin_add_update_workout'];
+        $allowed = ['admin_home', 'user_details', 'admin_meals', 'admin_workout', 'xp-system','messages', 'settings','admin_add_update_meal','admin_add_update_workout'];
             $pageFile = "$page.php";
 
             if (in_array($page, $allowed) && file_exists($pageFile)) {

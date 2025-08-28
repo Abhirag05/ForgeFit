@@ -92,6 +92,11 @@
                         <i class="fas fa-trophy"></i> XP System
                     </a>
                 </li>
+                 <li class="nav-item">
+                    <a class="nav-link" href="admin_layout.php?page=messages">
+                        <i class="fas fa-envelope"></i> Messages
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="admin_layout.php?page=settings">
                         <i class="fas fa-cog"></i> Settings

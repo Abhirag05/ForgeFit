@@ -1,3 +1,23 @@
+<?php
+
+  include 'db.php';
+  //Contact information inserting php logic
+  $show_alert = false;
+  if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $name = $_POST['user_name'];
+    $email = $_POST['email'];
+    $message = $_POST['message'];
+
+   // query to Insert into database
+    $stmt = $conn->prepare("INSERT INTO contact_details (user_name, email, message) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $name, $email, $message);
+     if ($stmt->execute()) {
+      $show_alert = true;
+    }
+    $stmt->close();
+  }
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -623,6 +643,19 @@
   <!-- Lightning Particle Background -->
   <div id="particles-js"></div>
 
+   <!-- Success Alert -->
+  <?php if ($show_alert): ?>
+    <div id="contact-success-alert" style="position:fixed;top:30px;left:50%;transform:translateX(-50%);background:#4BB543;color:#fff;padding:16px 32px;border-radius:8px;z-index:9999;box-shadow:0 2px 12px rgba(0,0,0,0.15);font-size:1.1rem;">
+      Message sent successfully!
+    </div>
+    <script>
+      setTimeout(function() {
+        var alertDiv = document.getElementById('contact-success-alert');
+        if(alertDiv) alertDiv.style.display = 'none';
+      }, 2500);
+    </script>
+  <?php endif; ?>
+
   <!-- Simplified Navbar -->
   <nav>
     <div class="logo" style="padding:0; margin:0; display:flex; align-items:center;">
@@ -734,17 +767,17 @@
   <!-- Contact Section -->
   <section class="contact" id="contact">
     <h2>Contact Us</h2>
-    <form class="contact-form">
+    <form class="contact-form" method="POST">
       <div class="form-group">
-        <input type="text" id="name" placeholder=" ">
+        <input type="text" id="name" name="user_name" placeholder=" ">
         <label for="name">Your Name</label>
       </div>
       <div class="form-group">
-        <input type="email" id="email" placeholder=" ">
+        <input type="email" id="email" name="email" placeholder=" ">
         <label for="email">Email Address</label>
       </div>
       <div class="form-group">
-        <textarea id="message" placeholder=" " rows="5"></textarea>
+        <textarea id="message" name="message" placeholder=" " rows="5"></textarea>
         <label for="message">Your Message</label>
       </div>
       <button type="submit" class="cta-btn">Send Message</button>
