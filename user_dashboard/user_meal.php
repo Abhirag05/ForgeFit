@@ -7,13 +7,39 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+$user_id = $_SESSION['user_id'];
+$isEdit = false;
+$editMealData = null;
+
+// Check if this is an edit operation
+if (isset($_GET['edit']) && !empty($_GET['edit'])) {
+    $isEdit = true;
+    $meal_log_id = intval($_GET['edit']);
+    
+    // Fetch existing meal data for editing
+    $editQuery = "SELECT lm.*, m.food_name, m.unit 
+                  FROM logged_meals lm 
+                  JOIN meals m ON lm.meal_id = m.meal_id 
+                  WHERE lm.meal_log_id = $meal_log_id AND lm.user_id = $user_id";
+    $editResult = mysqli_query($conn, $editQuery);
+    
+    if ($editResult && mysqli_num_rows($editResult) > 0) {
+        $editMealData = mysqli_fetch_assoc($editResult);
+    } else {
+        // Invalid meal_log_id or doesn't belong to user
+        header("Location: meal_history.php");
+        exit();
+    }
+}
+
 // Fetch meals from database
 $mealOptions = "";
 $sql = "SELECT meal_id, food_name, unit, calories FROM meals";
 $result = mysqli_query($conn, $sql);
 
 while ($row = mysqli_fetch_assoc($result)) {
-    $mealOptions .= "<option value='{$row['meal_id']}' data-unit='" . htmlspecialchars($row['unit']) . "'>" .
+    $selected = ($isEdit && $editMealData && $editMealData['meal_id'] == $row['meal_id']) ? 'selected' : '';
+    $mealOptions .= "<option value='{$row['meal_id']}' data-unit='" . htmlspecialchars($row['unit']) . "' $selected>" .
                     htmlspecialchars($row['food_name']) . 
                     "</option>";
 }
@@ -421,38 +447,42 @@ while ($row = mysqli_fetch_assoc($result)) {
     <div class="container">
       <div class="form-card">
         <div class="form-header-flex">
-          <h1>Log New Meal</h1>
+          <h1><?= $isEdit ? 'Edit Meal' : 'Log New Meal' ?></h1>
           <a href="meal_history.php" class="view-history-btn">
             <i class="fas fa-history"></i> View Meal History
           </a>
         </div>
         <form action="save_meal.php" method="POST">
+            <?php if ($isEdit): ?>
+                <input type="hidden" name="meal_log_id" value="<?= $editMealData['meal_log_id'] ?>">
+                <input type="hidden" name="is_edit" value="1">
+            <?php endif; ?>
             <div class="form-group">
               <label><i class="fas fa-clock"></i> Meal Time</label>
               <div class="time-options">
                 <div class="time-option">
-                  <input type="radio" id="breakfast" name="meal_time" value="breakfast" checked>
+                  <input type="radio" id="breakfast" name="meal_time" value="breakfast" <?= (!$isEdit && !isset($_POST['meal_time'])) || ($isEdit && $editMealData['meal_time'] === 'breakfast') ? 'checked' : '' ?>>
                   <label for="breakfast">
                     <i class="fas fa-sun"></i>
                     Breakfast
                   </label>
                 </div>
                 <div class="time-option">
-                  <input type="radio" id="lunch" name="meal_time" value="lunch">
+                  <input type="radio" id="lunch" name="meal_time" value="lunch" <?= $isEdit && $editMealData['meal_time'] === 'lunch' ? 'checked' : '' ?>>
                   <label for="lunch">
                     <i class="fas fa-utensils"></i>
                     Lunch
                   </label>
                 </div>
                 <div class="time-option">
-                  <input type="radio" id="snack" name="meal_time" value="snack">
+                  <input type="radio" id="snack" name="meal_time" value="snack" <?= $isEdit && $editMealData['meal_time'] === 'snack' ? 'checked' : '' ?>>
                   <label for="snack">
                     <i class="fas fa-cookie"></i>
                     Snack
                   </label>
                 </div>
                 <div class="time-option">
-                  <input type="radio" id="dinner" name="meal_time" value="dinner">
+                  <input type="radio" id="dinner" name="meal_time" value="dinner" <?= $isEdit && $editMealData['meal_time'] === 'dinner' ? 'checked' : '' ?>>
                   <label for="dinner">
                     <i class="fas fa-moon"></i>
                     Dinner
@@ -483,7 +513,7 @@ while ($row = mysqli_fetch_assoc($result)) {
             </div>
             
             <button type="submit" class="submit-btn">
-              <i class="fas fa-plus-circle"></i> Add Meal
+              <i class="fas fa-<?= $isEdit ? 'save' : 'plus-circle' ?>"></i> <?= $isEdit ? 'Update Meal' : 'Add Meal' ?>
             </button>
           </form>
         </div>
@@ -512,13 +542,20 @@ while ($row = mysqli_fetch_assoc($result)) {
         }
       });
       
-      // Set default datetime to now
-      const now = new Date();
-      // Format as YYYY-MM-DDTHH:MM (datetime-local input format)
-      // Adjust for timezone offset
-      const timezoneOffset = now.getTimezoneOffset() * 60000;
-      const localISOTime = new Date(now - timezoneOffset).toISOString().slice(0, 16);
-      document.getElementById('datetime').value = localISOTime;
+      // Set datetime value
+      <?php if ($isEdit && $editMealData): ?>
+        // For edit mode, use the existing meal's datetime
+        const editDate = new Date('<?= $editMealData['date'] ?>');
+        const editTimezoneOffset = editDate.getTimezoneOffset() * 60000;
+        const editLocalISOTime = new Date(editDate - editTimezoneOffset).toISOString().slice(0, 16);
+        document.getElementById('datetime').value = editLocalISOTime;
+      <?php else: ?>
+        // For new meal, set default datetime to now
+        const now = new Date();
+        const timezoneOffset = now.getTimezoneOffset() * 60000;
+        const localISOTime = new Date(now - timezoneOffset).toISOString().slice(0, 16);
+        document.getElementById('datetime').value = localISOTime;
+      <?php endif; ?>
     });
     </script>
   <script>
@@ -575,8 +612,7 @@ while ($row = mysqli_fetch_assoc($result)) {
       return options;
     }
 
-    mealSelect.addEventListener('change', function () {
-      const unit = this.options[this.selectedIndex].dataset.unit || '';
+    function populateQuantityOptions(unit, selectedQuantity = null) {
       quantitySelect.innerHTML = "<option value=''>-- Select quantity --</option>";
 
       if (unit) {
@@ -585,10 +621,29 @@ while ($row = mysqli_fetch_assoc($result)) {
           const el = document.createElement('option');
           el.value = opt.value;
           el.textContent = opt.label;
+          if (selectedQuantity && parseFloat(opt.value) === parseFloat(selectedQuantity)) {
+            el.selected = true;
+          }
           quantitySelect.appendChild(el);
         });
       }
+    }
+
+    mealSelect.addEventListener('change', function () {
+      const unit = this.options[this.selectedIndex].dataset.unit || '';
+      populateQuantityOptions(unit);
     });
+
+    // For edit mode, populate quantity options on page load
+    <?php if ($isEdit && $editMealData): ?>
+    document.addEventListener('DOMContentLoaded', function() {
+      const selectedMeal = document.querySelector('#meal option:checked');
+      if (selectedMeal) {
+        const unit = selectedMeal.dataset.unit || '';
+        populateQuantityOptions(unit, <?= $editMealData['quantity'] ?>);
+      }
+    });
+    <?php endif; ?>
   </script>
   <script>
     // Check for session alerts and display them
