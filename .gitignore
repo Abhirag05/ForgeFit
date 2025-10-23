@@ -1,1 +1,8 @@
 .env
+# Ignore e
+xecutable files
+*.exe
+
+# Ignore large installer files
+*Setup*.exe
+GitHubDesktopSetup-x64.exe
