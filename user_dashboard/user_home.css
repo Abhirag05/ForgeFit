@@ -129,7 +129,9 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .section-title {
@@ -139,75 +141,177 @@ body {
 }
 
 .progress-container {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 2rem;
-    max-width: 400px;
     width: 100%;
-    margin: 0 auto;
 }
 
 .progress-item {
-    margin-bottom: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.progress-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+}
+
+.progress-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(166, 74, 255, 0.5), transparent);
+    border-radius: 12px 12px 0 0;
 }
 
 .progress-label {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 0.5rem;
+    align-items: center;
+    margin-bottom: 1rem;
     color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.progress-label span:first-child {
+    color: white;
+    font-weight: 600;
+}
+
+.progress-label span:last-child {
+    color: rgba(255, 255, 255, 0.7);
     font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 500;
+    position: relative;
+}
+
+.progress-label span:last-child::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    background: #a64aff;
+    border-radius: 50%;
 }
 
 .progress-bar {
-    height: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
     overflow: hidden;
-    width: 50%;
+    width: 100%;
+    position: relative;
 }
 
 .progress-fill {
     height: 100%;
     background: linear-gradient(90deg, #a64aff, #6a00ff);
-    border-radius: 4px;
-    transition: width 0.3s ease;
+    border-radius: 6px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
-/* Responsive Progress Section - FIXED */
-@media (max-width: 400px) {
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Responsive Progress Section */
+@media (max-width: 768px) {
+    .progress-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
     .progress-section {
-        padding: 1.2rem 0.8rem;
+        padding: 1.5rem;
     }
+    
+    .section-header {
+        margin-bottom: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .progress-section {
+        padding: 1.2rem 1rem;
+    }
+    
     .progress-item {
-        margin-bottom: 1rem;
-        min-width: 0;
-        width: 100%;
+        padding: 1.2rem;
     }
+    
     .progress-label {
-        font-size: 0.8rem;
-        flex-wrap: wrap;
-        gap: 0.2rem;
+        font-size: 0.9rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    .progress-label span:last-child {
+        font-size: 0.85rem;
+        padding: 0.2rem 0.6rem;
+    }
+    
+    .section-title {
+        font-size: 1.3rem;
     }
 }
 
 @media (max-width: 360px) {
     .progress-section {
-        padding: 1rem 0.5rem;
+        padding: 1rem 0.8rem;
     }
+    
     .progress-item {
-        margin-bottom: 0.8rem;
-        min-width: 0;
-        width: 100%;
+        padding: 1rem;
     }
+    
     .progress-label {
-        font-size: 0.75rem;
-        flex-wrap: wrap;
-        gap: 0.1rem;
+        font-size: 0.85rem;
+        margin-bottom: 0.7rem;
     }
+    
+    .progress-label span:last-child {
+        font-size: 0.8rem;
+        padding: 0.15rem 0.5rem;
+    }
+    
     .progress-bar {
-        height: 6px;
-        /* max-width: 240px; <-- REMOVED: This was also causing overflow */
+        height: 8px;
+    }
+    
+    .section-title {
+        font-size: 1.2rem;
+    }
+    
+    .section-header {
+        margin-bottom: 1.2rem;
+        padding-bottom: 0.8rem;
     }
 }
 
@@ -543,4 +647,67 @@ body {
     font-size: 0.92rem;
     font-weight: 600;
     margin-top: 0.2rem;
+}
+/* En
+hanced Progress Status Colors */
+.progress-item[data-status="excellent"] .progress-fill {
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.progress-item[data-status="good"] .progress-fill {
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+.progress-item[data-status="warning"] .progress-fill {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.progress-item[data-status="poor"] .progress-fill {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+/* Progress Item Type Icons */
+.progress-item::after {
+    content: '';
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    width: 24px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    opacity: 0.6;
+}
+
+.progress-item[data-type="workout"]::after {
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" fill="rgba(166,74,255,0.8)" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/></svg>') center/16px no-repeat;
+}
+
+.progress-item[data-type="calories"]::after {
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" fill="rgba(255,152,0,0.8)" viewBox="0 0 24 24"><path d="M11.5 2L13.09 8.26L22 9L17.22 13.78L18.18 22.5L11.5 19.77L4.82 22.5L5.78 13.78L1 9L9.91 8.26L11.5 2Z"/></svg>') center/16px no-repeat;
+}
+
+.progress-item[data-type="water"]::after {
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" fill="rgba(59,130,246,0.8)" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/></svg>') center/16px no-repeat;
+}
+
+.progress-item[data-type="consistency"]::after {
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" fill="rgba(59,130,246,0.8)" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.48 2 12 2M15.5 16.25L11.5 14.25V8H13V13.25L16 14.75L15.5 16.25Z"/></svg>') center/16px no-repeat;
+}
+
+/* Progress Item Status Indicators */
+.progress-item[data-status="excellent"]::before {
+    background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.6), transparent);
+}
+
+.progress-item[data-status="good"]::before {
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6), transparent);
+}
+
+.progress-item[data-status="warning"]::before {
+    background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.6), transparent);
+}
+
+.progress-item[data-status="poor"]::before {
+    background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.6), transparent);
 }

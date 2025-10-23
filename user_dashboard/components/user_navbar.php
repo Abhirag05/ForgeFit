@@ -329,7 +329,6 @@ if (!$profile_img) {
       <li><a href="user_workout.php" class="menu-item<?php if($current == 'user_workout.php') echo ' active'; ?>"><i class="fas fa-running"></i> <span>Workouts</span></a></li>
       <li><a href="user_meal.php" class="menu-item<?php if($current == 'user_meal.php') echo ' active'; ?>"><i class="fas fa-utensils"></i> <span>Nutrition</span></a></li>
       <li><a href="chat_bot.php" class="menu-item<?php if($current == 'chat_bot.php') echo ' active'; ?>"><i class="fas fa-crown"></i> <span>Chat Bot</span></a></li>
-      <li><a href="#" class="menu-item"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
     </ul>
 
     <!-- Hamburger (Mobile) -->

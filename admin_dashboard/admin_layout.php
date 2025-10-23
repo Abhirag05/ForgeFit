@@ -39,6 +39,54 @@ try {
     $row = $stmt->fetch_row();
     $workouts_count = $row[0];
     
+    // Fetch activity data for last 30 days (workouts and meals)
+    $activity_data = [];
+    $activity_labels = [];
+    $workout_data = [];
+    $meal_data = [];
+    
+    // Get last 30 days of workout data
+    $workout_query = "SELECT DATE(date) as date, COUNT(*) as count 
+                      FROM all_logged_workouts 
+                      WHERE date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                      GROUP BY DATE(date)
+                      ORDER BY date ASC";
+    $workout_result = $conn->query($workout_query);
+    $workout_by_date = [];
+    while($row = $workout_result->fetch_assoc()) {
+        $workout_by_date[$row['date']] = $row['count'];
+    }
+    
+    // Get last 30 days of meal data
+    $meal_query = "SELECT DATE(date) as date, COUNT(*) as count 
+                   FROM logged_meals 
+                   WHERE date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                   GROUP BY DATE(date)
+                   ORDER BY date ASC";
+    $meal_result = $conn->query($meal_query);
+    $meal_by_date = [];
+    while($row = $meal_result->fetch_assoc()) {
+        $meal_by_date[$row['date']] = $row['count'];
+    }
+    
+    // Generate labels and data for last 30 days
+    for($i = 29; $i >= 0; $i--) {
+        $date = date('Y-m-d', strtotime("-$i days"));
+        $label = date('M j', strtotime("-$i days"));
+        $activity_labels[] = $label;
+        $workout_data[] = isset($workout_by_date[$date]) ? $workout_by_date[$date] : 0;
+        $meal_data[] = isset($meal_by_date[$date]) ? $meal_by_date[$date] : 0;
+    }
+    
+    // Get user distribution by role/premium status
+    $user_dist_query = "SELECT 
+                        SUM(CASE WHEN premium = 0 THEN 1 ELSE 0 END) as basic,
+                        SUM(CASE WHEN premium = 1 THEN 1 ELSE 0 END) as premium,
+                        SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) as admin
+                        FROM users";
+    $user_dist_result = $conn->query($user_dist_query);
+    $user_dist = $user_dist_result->fetch_assoc();
+    
     // No active/new users stat (no created_at or last_login field)
 } catch (Exception $e) {
     // Handle error

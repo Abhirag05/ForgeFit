@@ -154,16 +154,16 @@
 
 <!-- Chart scripts -->
 <script>
-    // Activity Chart
+    // Activity Chart - Real data from database
     const activityCtx = document.getElementById('activityChart').getContext('2d');
     new Chart(activityCtx, {
         type: 'line',
         data: {
-            labels: ['Jan 1','Jan 5','Jan 10','Jan 15','Jan 20','Jan 25','Jan 30'],
+            labels: <?php echo json_encode($activity_labels); ?>,
             datasets: [
                 {
                     label: 'Workouts',
-                    data: [12,19,15,20,22,18,25],
+                    data: <?php echo json_encode($workout_data); ?>,
                     borderColor: 'rgba(243,156,18,1)',
                     backgroundColor: 'rgba(243,156,18,0.1)',
                     tension: 0.3,
@@ -171,7 +171,7 @@
                 },
                 {
                     label: 'Meals',
-                    data: [25,30,28,35,32,40,38],
+                    data: <?php echo json_encode($meal_data); ?>,
                     borderColor: 'rgba(46,204,113,1)',
                     backgroundColor: 'rgba(46,204,113,0.1)',
                     tension: 0.3,
@@ -182,29 +182,44 @@
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'top' } },
-            scales: { y: { beginAtZero: true } }
+            plugins: { 
+                legend: { position: 'top' },
+                title: {
+                    display: true,
+                    text: 'Daily Activity Trend'
+                }
+            },
+            scales: { 
+                y: { 
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                } 
+            }
         }
     });
 
-    // User Distribution Chart
+    // User Distribution Chart - Real data from database
     const userDistCtx = document.getElementById('userDistributionChart').getContext('2d');
     new Chart(userDistCtx, {
         type: 'doughnut',
         data: {
-            labels: ['Basic','Premium','Pro','Admin'],
+            labels: ['Basic Users','Premium Users','Admins'],
             datasets: [{
-                data: [65,25,8,2],
+                data: [
+                    <?php echo isset($user_dist['basic']) ? $user_dist['basic'] : 0; ?>,
+                    <?php echo isset($user_dist['premium']) ? $user_dist['premium'] : 0; ?>,
+                    <?php echo isset($user_dist['admin']) ? $user_dist['admin'] : 0; ?>
+                ],
                 backgroundColor: [
                     'rgba(52,152,219,0.8)',
                     'rgba(155,89,182,0.8)',
-                    'rgba(46,204,113,0.8)',
                     'rgba(231,76,60,0.8)'
                 ],
                 borderColor: [
                     'rgba(52,152,219,1)',
                     'rgba(155,89,182,1)',
-                    'rgba(46,204,113,1)',
                     'rgba(231,76,60,1)'
                 ],
                 borderWidth: 1
@@ -213,7 +228,13 @@
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'right' } }
+            plugins: { 
+                legend: { position: 'right' },
+                title: {
+                    display: true,
+                    text: 'User Types'
+                }
+            }
         }
     });
 </script>

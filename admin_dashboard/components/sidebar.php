@@ -97,11 +97,6 @@
                         <i class="fas fa-envelope"></i> Messages
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="admin_layout.php?page=settings">
-                        <i class="fas fa-cog"></i> Settings
-                    </a>
-                </li>
                 <li class="nav-item mt-3">
                     <a class="nav-link text-danger" href="../logout.php">
                         <i class="fas fa-sign-out-alt"></i> Logout

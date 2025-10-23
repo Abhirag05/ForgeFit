@@ -220,6 +220,47 @@ if ($stmt) {
 
 // Calculate calorie percentage for circular progress
 $calorie_percentage = min(100, ($consumed_nutrients['calories'] / max(1, $nutrient_goals['calories'])) * 100);
+
+// ===== PROGRESS SECTION DATA =====
+$progress_data = [
+    'daily_workouts' => ['current' => 0, 'goal' => 1, 'percentage' => 0], // 1 workout per day goal
+    'daily_calories' => ['current' => 0, 'goal' => 0, 'percentage' => 0],
+    'daily_water' => ['current' => 0, 'goal' => 8, 'percentage' => 0], // 8 glasses of water per day
+    'workout_consistency' => ['current' => 0, 'goal' => 7, 'percentage' => 0] // days with workouts in last week
+];
+
+// 1. Daily Workout Goal (today)
+$stmt = $conn->prepare("SELECT COUNT(*) as workout_count FROM all_logged_workouts WHERE user_id = ? AND DATE(date) = ?");
+$stmt->bind_param("is", $user_id, $today);
+$stmt->execute();
+$result = $stmt->get_result()->fetch_assoc();
+$progress_data['daily_workouts']['current'] = (int)($result['workout_count'] ?? 0);
+$progress_data['daily_workouts']['percentage'] = min(100, ($progress_data['daily_workouts']['current'] / $progress_data['daily_workouts']['goal']) * 100);
+$stmt->close();
+
+// 2. Daily Calorie Goal (today)
+$progress_data['daily_calories']['current'] = $consumed_nutrients['calories'];
+$progress_data['daily_calories']['goal'] = $nutrient_goals['calories'];
+$progress_data['daily_calories']['percentage'] = min(100, ($consumed_nutrients['calories'] / max(1, $nutrient_goals['calories'])) * 100);
+
+// 3. Daily Water Intake (today)
+$stmt = $conn->prepare("SELECT COALESCE(SUM(glasses_count), 0) as total_glasses FROM user_water_intake WHERE user_id = ? AND date_recorded = ?");
+$stmt->bind_param("is", $user_id, $today);
+$stmt->execute();
+$result = $stmt->get_result()->fetch_assoc();
+$progress_data['daily_water']['current'] = (int)($result['total_glasses'] ?? 0);
+$stmt->close();
+$progress_data['daily_water']['percentage'] = min(100, ($progress_data['daily_water']['current'] / $progress_data['daily_water']['goal']) * 100);
+
+// 4. Workout Consistency (last 7 days)
+$seven_days_ago = date('Y-m-d', strtotime('-7 days'));
+$stmt = $conn->prepare("SELECT COUNT(DISTINCT DATE(date)) as consistent_days FROM all_logged_workouts WHERE user_id = ? AND date >= ?");
+$stmt->bind_param("is", $user_id, $seven_days_ago);
+$stmt->execute();
+$result = $stmt->get_result()->fetch_assoc();
+$progress_data['workout_consistency']['current'] = (int)($result['consistent_days'] ?? 0);
+$progress_data['workout_consistency']['percentage'] = min(100, ($progress_data['workout_consistency']['current'] / $progress_data['workout_consistency']['goal']) * 100);
+$stmt->close();
 ?>
 
 <!DOCTYPE html>
@@ -383,43 +424,46 @@ $calorie_percentage = min(100, ($consumed_nutrients['calories'] / max(1, $nutrie
             <div class="progress-section">
                 <div class="section-header">
                     <h2 class="section-title">Your Progress</h2>
-                    <a href="#" style="color: var(--primary); text-decoration: none;">View Details</a>
+                    <a href="#" style="color: #a64aff; text-decoration: none; font-weight: 500; font-size: 0.9rem;">View Details</a>
                 </div>
                 <div class="progress-container">
-                    <div class="progress-item">
+                    <div class="progress-item" data-type="workout" data-status="<?php echo $progress_data['daily_workouts']['percentage'] >= 80 ? 'excellent' : ($progress_data['daily_workouts']['percentage'] >= 60 ? 'good' : ($progress_data['daily_workouts']['percentage'] >= 40 ? 'warning' : 'poor')); ?>">
                         <div class="progress-label">
-                            <span>Weekly Goal</span>
-                            <span>3/5 workouts</span>
+                            <span>Daily Workout Goal</span>
+                            <span><?php echo $progress_data['daily_workouts']['current']; ?>/<?php echo $progress_data['daily_workouts']['goal']; ?> workout</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: 60%"></div>
+                            <div class="progress-fill" style="width: <?php echo $progress_data['daily_workouts']['percentage']; ?>%"></div>
                         </div>
                     </div>
-                    <div class="progress-item">
+                    
+                    <div class="progress-item" data-type="calories" data-status="<?php echo $progress_data['daily_calories']['percentage'] >= 80 ? 'excellent' : ($progress_data['daily_calories']['percentage'] >= 60 ? 'good' : ($progress_data['daily_calories']['percentage'] >= 40 ? 'warning' : 'poor')); ?>">
                         <div class="progress-label">
-                            <span>Protein Intake</span>
-                            <span>120/150g</span>
+                            <span>Daily Calorie Target</span>
+                            <span><?php echo number_format($progress_data['daily_calories']['current']); ?>/<?php echo number_format($progress_data['daily_calories']['goal']); ?> cal</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: 80%"></div>
+                            <div class="progress-fill" style="width: <?php echo $progress_data['daily_calories']['percentage']; ?>%"></div>
                         </div>
                     </div>
-                    <div class="progress-item">
+                    
+                    <div class="progress-item" data-type="water" data-status="<?php echo $progress_data['daily_water']['percentage'] >= 80 ? 'excellent' : ($progress_data['daily_water']['percentage'] >= 60 ? 'good' : ($progress_data['daily_water']['percentage'] >= 40 ? 'warning' : 'poor')); ?>">
                         <div class="progress-label">
-                            <span>Sleep Quality</span>
-                            <span>6.5/8 hours</span>
+                            <span>Daily Water Intake</span>
+                            <span><?php echo $progress_data['daily_water']['current']; ?>/<?php echo $progress_data['daily_water']['goal']; ?> glasses</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: 81%"></div>
+                            <div class="progress-fill" style="width: <?php echo $progress_data['daily_water']['percentage']; ?>%"></div>
                         </div>
                     </div>
-                    <div class="progress-item">
+                    
+                    <div class="progress-item" data-type="consistency" data-status="<?php echo $progress_data['workout_consistency']['percentage'] >= 80 ? 'excellent' : ($progress_data['workout_consistency']['percentage'] >= 60 ? 'good' : ($progress_data['workout_consistency']['percentage'] >= 40 ? 'warning' : 'poor')); ?>">
                         <div class="progress-label">
-                            <span>Steps</span>
-                            <span>8,500/10,000</span>
+                            <span>Workout Consistency</span>
+                            <span><?php echo $progress_data['workout_consistency']['current']; ?>/<?php echo $progress_data['workout_consistency']['goal']; ?> days</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: 85%"></div>
+                            <div class="progress-fill" style="width: <?php echo $progress_data['workout_consistency']['percentage']; ?>%"></div>
                         </div>
                     </div>
                 </div>
@@ -446,14 +490,6 @@ $calorie_percentage = min(100, ($consumed_nutrients['calories'] / max(1, $nutrie
                         <i class="fas fa-tint"></i>
                     </div>
                     <span class="action-label">Water Intake</span>
-                </button>
-                </a>
-                 <a href="user_water.php" style="text-decoration:none"> 
-                <button class="action-btn">
-                    <div class="action-icon">
-                    <i class="fas fa-shoe-prints"></i>  
-                    </div>
-                    <span class="action-label">Add Steps</span>
                 </button>
                 </a>
             </div>
