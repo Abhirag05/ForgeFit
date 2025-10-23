@@ -1,5 +1,22 @@
 <?php
 session_start();
+
+// Prevent browser caching
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+
+// If user is already logged in, redirect to appropriate dashboard
+if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
+    if ($_SESSION['role'] === 'user') {
+        header("Location: user_dashboard/user_home.php");
+        exit();
+    } elseif ($_SESSION['role'] === 'admin') {
+        header("Location: admin_dashboard/admin_home.php");
+        exit();
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -223,6 +240,17 @@ session_start();
 
   <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   <script>
+    // Prevent caching of signin page
+    (function() {
+        // Detect if page is loaded from cache
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                // Page was loaded from cache
+                window.location.reload();
+            }
+        });
+    })();
+    
     document.addEventListener('DOMContentLoaded', () => {
       // Initialize particles.js
       particlesJS("particles-js", {

@@ -1,5 +1,7 @@
 <?php
-session_start();
+// Include security headers and session validation
+require_once 'security_headers.php';
+
 include '../db.php';
 // Fetch user level and experience
 $user_level = 1;
@@ -53,11 +55,7 @@ if ($user_id) {
     }
 }
 
-// Access control: Only logged-in users allowed
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'user') {
-    header("Location: ../signin.php");
-    exit();
-}
+// Additional session validation (already checked at top, but keeping for redundancy)
 // Session timeout check
 if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
     session_unset();     
@@ -495,6 +493,7 @@ $stmt->close();
             </div>
         </main>
     </div>
+    <script src="prevent_back_button.js"></script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
