@@ -429,7 +429,7 @@
       border: 1px solid rgba(255, 77, 77, 0.3);
       border-radius: 10px;
       color: white;
-  font-size: 1.1rem;
+      font-size: 1.1rem;
       transition: all 0.3s;
     }
 

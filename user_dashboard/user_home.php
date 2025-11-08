@@ -65,7 +65,6 @@ if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 
 }
 $_SESSION['LAST_ACTIVITY'] = time(); // Update time on activity
 
-// Sample fitness data (in a real app, this would come from your database)
 $user_id = $_SESSION['user_id'];
 // Fetch user profile image
 $profile_img = null;

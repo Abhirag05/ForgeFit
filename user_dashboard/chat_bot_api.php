@@ -3,8 +3,18 @@ session_start();
 header('Content-Type: application/json');
 include '../db.php'; // 🔁 Adjust this path based on your project
 
-// 🔐 Gemini API Key
-$api_key = "AIzaSyBacWQCE7uXPClluh1pQQVf-Sl1Hg2lxZI";
+// 🔐 Load environment variables
+require_once __DIR__ . '/../vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
+
+// 🔐 Gemini API Key from .env
+$api_key = $_ENV['GEMINI_API_KEY'] ?? '';
+
+if (empty($api_key)) {
+    echo json_encode(['reply' => 'API key not configured.']);
+    exit;
+}
 
 // 🧠 User must be logged in
 if (!isset($_SESSION['user_id'])) {
@@ -44,7 +54,7 @@ foreach ($rules as $q => $r) {
     }
 }
 
-// 🤖 Fallback to Gemini API if not rule-based
+//  Fallback to Gemini API if not rule-based
 if (!$matched) {
     $payload = [
         "contents" => [
